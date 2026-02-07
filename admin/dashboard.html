@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - منصتي</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">📊 لوحة التحكم</div>
+            <nav>
+                <a href="../index.html">الرئيسية</a>
+                <a href="#stats">الإحصائيات</a>
+                <a href="#vendors">البائعين</a>
+                <a href="#products">المنتجات</a>
+                <button onclick="logout()" class="btn">تسجيل الخروج</button>
+            </nav>
+        </header>
+
+        <section class="dashboard">
+            <div class="dashboard-menu">
+                <h2>لوحة التحكم الرئيسية</h2>
+                <p>إدارة كاملة للمنصة والمستخدمين</p>
+            </div>
+
+            <!-- الإحصائيات -->
+            <div id="stats" class="features">
+                <div class="feature-card">
+                    <h3>👥 عدد البائعين</h3>
+                    <p id="total-vendors">0</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📦 المنتجات</h3>
+                    <p id="total-products">0</p>
+                </div>
+                <div class="feature-card">
+                    <h3>💰 إجمالي المبيعات</h3>
+                    <p id="total-sales">$0</p>
+                </div>
+            </div>
+
+            <!-- إجراءات سريعة -->
+            <div class="hero">
+                <h3>إجراءات سريعة</h3>
+                <div style="margin-top: 2rem;">
+                    <button onclick="handleAction('import-amazon')" class="btn btn-primary">
+                        📥 استيراد من أمازون
+                    </button>
+                    <button onclick="handleAction('add-vendor')" class="btn btn-secondary">
+                        👤 إضافة بائع جديد
+                    </button>
+                    <button onclick="handleAction('view-products')" class="btn">
+                        📋 عرض جميع المنتجات
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2024 منصتي - لوحة التحكم</p>
+            <p>للدعم: support@mystore.com</p>
+        </footer>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                window.location.href = '../index.html';
+            }
+        }
+    </script>
+</body>
+</html>
