@@ -42,6 +42,12 @@
         .store-card { transition: all 0.3s ease; }
         .store-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .premium-badge { background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); }
+        .loading { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
     </style>
 </head>
 <body class="bg-gray-50 font-cairo">
@@ -200,7 +206,7 @@
                                 </li>
                                 <li class="flex items-center">
                                     <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>حتى 50 منتج</span>
+                                    <span>منتجات غير محدودة</span>
                                 </li>
                                 <li class="flex items-center">
                                     <i class="fas fa-check text-green-500 ml-2"></i>
@@ -237,7 +243,7 @@
                             <ul class="space-y-3 mb-8">
                                 <li class="flex items-center">
                                     <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span class="font-semibold">3 متاجر</span>
+                                    <span class="font-semibold">5 متاجر</span>
                                 </li>
                                 <li class="flex items-center">
                                     <i class="fas fa-check text-purple-500 ml-2"></i>
@@ -392,7 +398,7 @@
         <div class="bg-white rounded-xl max-w-2xl w-full p-8">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-2xl font-bold text-dark">إنشاء متجر جديد</h3>
-                <button onclick="closeModal('createStoreModal')" class="text-gray-500 hover:text-gray-700">
+                <button onclick="closeCreateStoreModal()" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
@@ -418,7 +424,7 @@
                     </div>
                 </div>
                 <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="closeModal('createStoreModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</button>
+                    <button type="button" onclick="closeCreateStoreModal()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</button>
                     <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
                         <i class="fas fa-check ml-2"></i>
                         إنشاء المتجر
@@ -439,6 +445,23 @@
                     </button>
                 </div>
                 <div id="storeDetailsContent">
+                    <!-- سيتم ملؤه ديناميكياً -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Store Page (External Store) -->
+    <div id="storePageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-2xl font-bold text-dark" id="storePageTitle">صفحة المتجر</h3>
+                    <button onclick="closeModal('storePageModal')" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+                <div id="storePageContent">
                     <!-- سيتم ملؤه ديناميكياً -->
                 </div>
             </div>
@@ -518,6 +541,11 @@
             checkUserPlanAndCreateStore();
         }
 
+        function closeCreateStoreModal() {
+            // إغلاق نافذة إنشاء المتجر فقط
+            closeModal('createStoreModal');
+        }
+
         async function checkUserPlanAndCreateStore() {
             try {
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -528,7 +556,7 @@
                 if (userData.plan === 'basic') {
                     maxStores = 1;
                 } else if (userData.plan === 'premium') {
-                    maxStores = 3;
+                    maxStores = 5;
                 } else {
                     maxStores = 1; // الباقة المجانية
                 }
@@ -549,7 +577,7 @@
                 }
                 
                 // إذا كان المسموح له، نفتح نافذة إنشاء المتجر
-                closeAllModals();
+                closeAllModals(); // إغلاق جميع النوافذ أولاً
                 document.getElementById('createStoreModal').classList.remove('hidden');
                 document.getElementById('createStoreModal').classList.add('flex');
                 
@@ -574,15 +602,23 @@
             loadStoreDetails(storeId);
         }
 
+        function showStorePage(storeId) {
+            currentStoreId = storeId;
+            closeAllModals();
+            document.getElementById('storePageModal').classList.remove('hidden');
+            document.getElementById('storePageModal').classList.add('flex');
+            loadStorePage(storeId);
+        }
+
         function closeModal(modalId) {
             document.getElementById(modalId).classList.add('hidden');
             document.getElementById(modalId).classList.remove('flex');
         }
 
         function closeAllModals() {
-            document.querySelectorAll('[id$="Modal"]').forEach(modal => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
+            const modals = ['loginModal', 'registerModal', 'createStoreModal', 'storeDetailsModal', 'storePageModal'];
+            modals.forEach(modalId => {
+                closeModal(modalId);
             });
         }
 
@@ -629,14 +665,14 @@
                     name: name,
                     email: email,
                     role: 'seller',
-                    plan: 'free', // الباقة المجانية افتراضياً
+                    plan: 'free',
                     createdAt: new Date().toISOString(),
                     storesCount: 0,
                     totalSales: 0,
                     subscriptionExpiry: null,
                     maxStores: 1,
-                    maxProducts: 50,
-                    commissionRate: 0.15 // 15% للباقة المجانية
+                    maxProducts: 99999, // منتجات غير محدودة للباقة المجانية
+                    commissionRate: 0.15
                 });
                 
                 showToast(`مرحباً ${name}، تم إنشاء حسابك`, 'success');
@@ -668,7 +704,7 @@
                         totalSales: 0,
                         subscriptionExpiry: null,
                         maxStores: 1,
-                        maxProducts: 50,
+                        maxProducts: 99999,
                         commissionRate: 0.15
                     });
                 }
@@ -750,7 +786,7 @@
                 });
                 
                 showToast('تم إنشاء المتجر بنجاح', 'success');
-                closeModal('createStoreModal');
+                closeCreateStoreModal(); // إغلاق نافذة إنشاء المتجر فقط
                 
                 // تلقائياً تفتح تفاصيل المتجر
                 setTimeout(() => {
@@ -823,11 +859,11 @@
                                     </div>
                                 </div>
                                 <div class="space-y-2">
-                                    <a href="${storeLink}" target="_blank" 
-                                       class="block w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
+                                    <button onclick="showStorePage('${storeId}')" 
+                                           class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
                                         <i class="fas fa-external-link-alt ml-2"></i>
                                         زيارة المتجر
-                                    </a>
+                                    </button>
                                     ${currentUser && currentUser.uid === store.ownerId ? `
                                         <button onclick="showStoreDetailsModal('${storeId}')" 
                                                 class="w-full border border-primary text-primary py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
@@ -961,11 +997,13 @@
                                 <i class="fas fa-trash ml-2"></i>
                                 حذف المتجر
                             </button>
-                            <a href="${store.storeUrl || `${window.location.origin}/store/${storeId}`}" target="_blank"
-                               class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                <i class="fas fa-external-link-alt ml-2"></i>
-                                زيارة المتجر
-                            </a>
+                            <div class="space-x-2 space-x-reverse">
+                                <button onclick="showStorePage('${storeId}')"
+                                        class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-external-link-alt ml-2"></i>
+                                    زيارة المتجر
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -980,17 +1018,207 @@
             }
         }
 
+        async function loadStorePage(storeId) {
+            const content = document.getElementById('storePageContent');
+            const title = document.getElementById('storePageTitle');
+            
+            try {
+                const storeDoc = await db.collection('stores').doc(storeId).get();
+                
+                if (!storeDoc.exists) {
+                    content.innerHTML = `
+                        <div class="text-center py-8">
+                            <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                            <p class="text-gray-500">المتجر غير موجود</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const store = storeDoc.data();
+                title.textContent = store.name;
+                
+                // تحميل منتجات المتجر للعرض في صفحة المتجر
+                const productsSnapshot = await db.collection('store_products')
+                    .where('storeId', '==', storeId)
+                    .where('status', '==', 'active')
+                    .get();
+                
+                let productsHTML = '';
+                if (!productsSnapshot.empty) {
+                    productsSnapshot.forEach(doc => {
+                        const product = doc.data();
+                        const price = product.productPrice || 0;
+                        const originalPrice = price * 1.2; // إضافة 20% للسعر الأصلي
+                        
+                        productsHTML += `
+                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                                <div class="p-6">
+                                    <h4 class="text-lg font-bold text-dark mb-2">${product.productName}</h4>
+                                    <p class="text-gray-600 text-sm mb-4">متوفر في ${store.name}</p>
+                                    
+                                    <div class="mb-4">
+                                        <div class="flex items-center mb-2">
+                                            <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
+                                            <span class="text-sm text-gray-500 line-through mr-2">$${originalPrice.toFixed(2)}</span>
+                                        </div>
+                                        <div class="text-sm text-green-600 mb-2">
+                                            <i class="fas fa-bolt ml-1"></i>
+                                            توصيل سريع
+                                        </div>
+                                    </div>
+                                    
+                                    <button onclick="simulatePurchase('${storeId}', '${product.productName}', ${price})" 
+                                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-shopping-cart ml-2"></i>
+                                        شراء الآن
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    productsHTML = `
+                        <div class="col-span-3 text-center py-12">
+                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">لا توجد منتجات في هذا المتجر حالياً</p>
+                            <p class="text-sm text-gray-400 mt-2">سيتم إضافة المنتجات قريباً</p>
+                        </div>
+                    `;
+                }
+                
+                content.innerHTML = `
+                    <div class="space-y-8">
+                        <!-- Store Header -->
+                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-8 text-white">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                <div>
+                                    <h2 class="text-3xl font-bold mb-2">${store.name}</h2>
+                                    <p class="text-blue-100">${store.description || 'متجر إلكتروني متكامل'}</p>
+                                </div>
+                                <div class="mt-4 md:mt-0">
+                                    <div class="flex items-center space-x-2 space-x-reverse">
+                                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-store text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm">التقييم</div>
+                                            <div class="flex">
+                                                ${Array(5).fill().map((_, i) => `
+                                                    <i class="fas fa-star ${i < Math.floor(store.rating || 0) ? 'text-yellow-300' : 'text-gray-300'} ml-1"></i>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Store Info -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-blue-50 p-6 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-shipping-fast text-blue-600 text-2xl ml-3"></i>
+                                    <div>
+                                        <h4 class="font-bold text-dark">توصيل سريع</h4>
+                                        <p class="text-gray-600 text-sm">شحن خلال 2-3 أيام عمل</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-6 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-shield-alt text-green-600 text-2xl ml-3"></i>
+                                    <div>
+                                        <h4 class="font-bold text-dark">دفع آمن</h4>
+                                        <p class="text-gray-600 text-sm">مدفوعات مشفرة وآمنة</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-6 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-headset text-purple-600 text-2xl ml-3"></i>
+                                    <div>
+                                        <h4 class="font-bold text-dark">دعم فني</h4>
+                                        <p class="text-gray-600 text-sm">دعم على مدار الساعة</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Products -->
+                        <div>
+                            <h3 class="text-2xl font-bold text-dark mb-6">منتجات المتجر</h3>
+                            ${productsSnapshot.empty ? productsHTML : `
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    ${productsHTML}
+                                </div>
+                            `}
+                        </div>
+                        
+                        <!-- Store Footer -->
+                        <div class="bg-gray-50 p-6 rounded-lg mt-8">
+                            <div class="text-center">
+                                <p class="text-gray-600 mb-4">© ${new Date().getFullYear()} ${store.name}. جميع الحقوق محفوظة.</p>
+                                <div class="flex justify-center space-x-4 space-x-reverse">
+                                    <span class="text-gray-500">
+                                        <i class="fas fa-phone ml-1"></i> للاستفسار: 0123456789
+                                    </span>
+                                    <span class="text-gray-500">
+                                        <i class="fas fa-envelope ml-1"></i> ${store.ownerName}@store.com
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading store page:', error);
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                        <p class="text-gray-500">حدث خطأ في تحميل صفحة المتجر</p>
+                        <button onclick="closeModal('storePageModal')" class="mt-4 bg-primary text-white px-6 py-2 rounded-lg">
+                            العودة
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function simulatePurchase(storeId, productName, price) {
+            showToast(`تمت عملية الشراء بنجاح! ${productName} - $${price.toFixed(2)}`, 'success');
+            
+            // تحديث إحصائيات المتجر
+            db.collection('stores').doc(storeId).update({
+                salesCount: firebase.firestore.FieldValue.increment(1),
+                lastUpdated: new Date().toISOString()
+            });
+            
+            // تحديث إحصائيات المستخدم
+            if (currentUser) {
+                db.collection('users').doc(currentUser.uid).update({
+                    totalSales: firebase.firestore.FieldValue.increment(1)
+                });
+            }
+            
+            // إغلاق صفحة المتجر بعد ثانيتين
+            setTimeout(() => {
+                closeModal('storePageModal');
+            }, 2000);
+        }
+
         async function loadProducts() {
             const container = document.getElementById('productsContainer');
             
             try {
+                // جلب عدد محدود من المنتجات الحقيقية
                 const querySnapshot = await db.collection('products')
                     .where('status', '==', 'active')
-                    .limit(20)
+                    .limit(12)
                     .get();
                 
                 if (querySnapshot.empty) {
-                    // عرض رسالة بدلاً من إنشاء منتجات وهمية
+                    // عرض رسالة مناسبة
                     container.innerHTML = `
                         <div class="md:col-span-4 text-center py-12">
                             <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
@@ -1004,71 +1232,58 @@
                 }
                 
                 let productsHTML = '';
-                let productCount = 0;
                 
                 querySnapshot.forEach(doc => {
                     const product = doc.data();
                     const productId = doc.id;
                     
-                    if (product.status === 'active') {
-                        const price = Number(product.price) || 0;
-                        const originalPrice = Number(product.originalPrice) || 0;
-                        const expectedProfit = price * 0.2;
-                        
-                        productsHTML += `
-                            <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                                <div class="p-6">
-                                    <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                    <p class="text-gray-600 text-sm mb-4">${product.description || 'لا يوجد وصف'}</p>
-                                    
-                                    <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <span class="text-gray-700">السعر:</span>
+                    const price = Number(product.price) || 0;
+                    const originalPrice = Number(product.originalPrice) || price * 1.2;
+                    const expectedProfit = price * 0.2;
+                    
+                    productsHTML += `
+                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="text-xl font-bold text-dark">${product.name}</h3>
+                                    <span class="bg-primary text-white text-xs px-2 py-1 rounded-full">${getCategoryName(product.category)}</span>
+                                </div>
+                                <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج عالي الجودة'}</p>
+                                
+                                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="text-gray-700">السعر:</span>
+                                        <div class="text-right">
                                             <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                        </div>
-                                        ${originalPrice > price ? `
-                                            <div class="flex justify-between items-center mb-2">
-                                                <span class="text-gray-700">السعر الأصلي:</span>
-                                                <span class="text-lg text-gray-500 line-through">$${originalPrice.toFixed(2)}</span>
-                                            </div>
-                                        ` : ''}
-                                        <div class="flex justify-between items-center">
-                                            <span class="text-gray-700">الربح المتوقع:</span>
-                                            <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
+                                            <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
                                         </div>
                                     </div>
-                                    
-                                    ${currentUser ? `
-                                        <button onclick="addToStore('${productId}')" 
-                                                class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mb-2">
-                                            <i class="fas fa-plus ml-2"></i>
-                                            أضف لمتجري
-                                        </button>
-                                        <div class="text-center text-sm text-gray-500">
-                                            ربحك: $${expectedProfit.toFixed(2)} لكل بيع
-                                        </div>
-                                    ` : `
-                                        <button onclick="showLoginModal()" 
-                                                class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                            <i class="fas fa-sign-in-alt ml-2"></i>
-                                            سجل الدخول للإضافة
-                                        </button>
-                                    `}
+                                    <div class="flex justify-between items-center mt-3">
+                                        <span class="text-gray-700">الربح المتوقع:</span>
+                                        <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
+                                    </div>
                                 </div>
+                                
+                                ${currentUser ? `
+                                    <button onclick="addToStore('${productId}')" 
+                                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mb-2">
+                                        <i class="fas fa-plus ml-2"></i>
+                                        أضف لمتجري
+                                    </button>
+                                    <div class="text-center text-xs text-gray-500">
+                                        ربحك: $${expectedProfit.toFixed(2)} لكل بيع
+                                    </div>
+                                ` : `
+                                    <button onclick="showLoginModal()" 
+                                            class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fas fa-sign-in-alt ml-2"></i>
+                                        سجل الدخول للإضافة
+                                    </button>
+                                `}
                             </div>
-                        `;
-                        productCount++;
-                    }
-                });
-                
-                if (productCount === 0) {
-                    productsHTML = `
-                        <div class="md:col-span-4 text-center py-12">
-                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">لا توجد منتجات نشطة</p>
                         </div>
                     `;
-                }
+                });
                 
                 container.innerHTML = productsHTML;
             } catch (error) {
@@ -1092,7 +1307,7 @@
             try {
                 showToast('جاري إضافة المنتج للمتجر...');
                 
-                // التحقق من باقة المستخدم وعدد المنتجات المسموح بها
+                // التحقق من باقة المستخدم
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 const userData = userDoc.data();
                 
@@ -1115,12 +1330,11 @@
                     .where('storeId', '==', storeId)
                     .get();
                 
-                if (storeProducts.size >= userData.maxProducts) {
-                    showError(`لقد وصلت للحد الأقصى للمنتجات (${userData.maxProducts}) في باقاتك الحالية`);
-                    if (userData.plan === 'free' || userData.plan === 'basic') {
-                        showUpgradePlanModal();
-                    }
-                    return;
+                // لا يوجد حد للمنتجات في الباقة الأساسية
+                if (userData.plan === 'free' || userData.plan === 'basic') {
+                    // منتجات غير محدودة
+                } else if (userData.plan === 'premium') {
+                    // منتجات غير محدودة أيضاً
                 }
                 
                 const productDoc = await db.collection('products').doc(productId).get();
@@ -1159,7 +1373,7 @@
                 
             } catch (error) {
                 console.error('Error adding product to store:', error);
-                showError('خطأ في إضافة المنتج للمتجر');
+                showError('خطأ في إضافة المنتج للمتجر: ' + error.message);
             }
         }
 
@@ -1226,16 +1440,16 @@
                     'basic': {
                         price: 3,
                         maxStores: 1,
-                        maxProducts: 50,
+                        maxProducts: 99999, // غير محدود
                         commissionRate: 0.15,
-                        features: ['متجر واحد', 'حتى 50 منتج', 'دعم فني عبر البريد', 'تقارير أساسية']
+                        features: ['متجر واحد', 'منتجات غير محدودة', 'دعم فني عبر البريد', 'تقارير أساسية']
                     },
                     'premium': {
                         price: 15,
-                        maxStores: 3,
-                        maxProducts: 9999, // غير محدود عملياً
+                        maxStores: 5,
+                        maxProducts: 99999, // غير محدود
                         commissionRate: 0.10,
-                        features: ['3 متاجر', 'منتجات غير محدودة', 'دعم فني فوري', 'تقارير متقدمة', 'نطاق مخصص']
+                        features: ['5 متاجر', 'منتجات غير محدودة', 'دعم فني فوري', 'تقارير متقدمة', 'نطاق مخصص']
                     }
                 };
                 
@@ -1312,9 +1526,10 @@
                 'auth/wrong-password': 'كلمة المرور غير صحيحة',
                 'auth/email-already-in-use': 'هذا البريد مسجل بالفعل',
                 'auth/weak-password': 'كلمة المرور ضعيفة جداً',
-                'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت'
+                'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت',
+                'firestore/permission-denied': 'خطأ في الصلاحيات'
             };
-            return messages[errorCode] || 'حدث خطأ غير معروف';
+            return messages[errorCode] || 'حدث خطأ غير معروف: ' + errorCode;
         }
 
         // UI Update functions
@@ -1437,7 +1652,7 @@
                                             </div>
                                             <div>
                                                 <p class="text-gray-500 text-sm">المنتجات</p>
-                                                <p class="text-xl font-bold text-dark">${storeProducts.length}/${userData.maxProducts || 50}</p>
+                                                <p class="text-xl font-bold text-dark">${storeProducts.length}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1472,7 +1687,7 @@
                                         <div class="flex justify-between items-center">
                                             <div>
                                                 <h3 class="font-bold text-lg">ترقية للباقة المميزة</h3>
-                                                <p class="text-sm opacity-90">احصل على مميزات أكثر وأرباح أكبر</p>
+                                                <p class="text-sm opacity-90">احصل على 5 متاجر وأرباح أكبر</p>
                                             </div>
                                             <button onclick="subscribeToPlan('premium')" 
                                                     class="bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-gray-100">
@@ -1501,6 +1716,11 @@
                                                             <p class="text-gray-600 text-sm mt-1">${store.description || 'لا يوجد وصف'}</p>
                                                         </div>
                                                         <div class="flex space-x-2 space-x-reverse">
+                                                            <button onclick="showStorePage('${store.id}')" 
+                                                                    class="text-green-600 hover:text-green-800" 
+                                                                    title="زيارة المتجر">
+                                                                <i class="fas fa-external-link-alt"></i>
+                                                            </button>
                                                             <button onclick="showStoreDetailsModal('${store.id}')" 
                                                                     class="text-primary hover:text-blue-700" 
                                                                     title="تفاصيل المتجر">
@@ -1518,11 +1738,10 @@
                                                         <span class="text-gray-500">المبيعات: ${store.salesCount || 0}</span>
                                                     </div>
                                                     <div class="text-center">
-                                                        <a href="${store.storeUrl || `${window.location.origin}/store/${store.id}`}" 
-                                                           target="_blank"
-                                                           class="text-sm text-primary hover:underline">
-                                                            ${store.storeUrl || `${window.location.origin}/store/${store.id}`}
-                                                        </a>
+                                                        <button onclick="showStorePage('${store.id}')" 
+                                                                class="text-sm text-primary hover:underline">
+                                                            عرض صفحة المتجر
+                                                        </button>
                                                     </div>
                                                 </div>
                                             `).join('')}
@@ -1579,7 +1798,7 @@
                 
             } catch (error) {
                 console.error('Error loading user dashboard:', error);
-                showError('خطأ في تحميل لوحة التحكم');
+                showError('خطأ في تحميل لوحة التحكم: ' + error.message);
             }
         }
 
@@ -1616,24 +1835,28 @@
                     if (user) {
                         currentUser = user;
                         
-                        const userDoc = await db.collection('users').doc(user.uid).get();
-                        if (!userDoc.exists) {
-                            await db.collection('users').doc(user.uid).set({
-                                name: user.displayName || user.email.split('@')[0],
-                                email: user.email,
-                                role: 'seller',
-                                plan: 'free',
-                                createdAt: new Date().toISOString(),
-                                storesCount: 0,
-                                totalSales: 0,
-                                subscriptionExpiry: null,
-                                maxStores: 1,
-                                maxProducts: 50,
-                                commissionRate: 0.15
-                            });
+                        try {
+                            const userDoc = await db.collection('users').doc(user.uid).get();
+                            if (!userDoc.exists) {
+                                await db.collection('users').doc(user.uid).set({
+                                    name: user.displayName || user.email.split('@')[0],
+                                    email: user.email,
+                                    role: 'seller',
+                                    plan: 'free',
+                                    createdAt: new Date().toISOString(),
+                                    storesCount: 0,
+                                    totalSales: 0,
+                                    subscriptionExpiry: null,
+                                    maxStores: 1,
+                                    maxProducts: 99999,
+                                    commissionRate: 0.15
+                                });
+                            }
+                            
+                            updateUIAfterLogin();
+                        } catch (error) {
+                            console.error('Error initializing user:', error);
                         }
-                        
-                        updateUIAfterLogin();
                     } else {
                         currentUser = null;
                         updateUIAfterLogout();
@@ -1671,20 +1894,24 @@
                             (product.description && product.description.toLowerCase().includes(searchTerm))) {
                             
                             const price = Number(product.price) || 0;
+                            const originalPrice = Number(product.originalPrice) || price * 1.2;
                             const expectedProfit = price * 0.2;
                             
                             productsHTML += `
                                 <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                        <p class="text-gray-600 text-sm mb-4">${product.description || 'لا يوجد وصف'}</p>
+                                        <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج عالي الجودة'}</p>
                                         
                                         <div class="mb-4 p-3 bg-blue-50 rounded-lg">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-gray-700">السعر:</span>
-                                                <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
+                                                <div class="text-right">
+                                                    <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
+                                                    <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
+                                                </div>
                                             </div>
-                                            <div class="flex justify-between items-center mt-2">
+                                            <div class="flex justify-between items-center mt-3">
                                                 <span class="text-gray-700">الربح المتوقع:</span>
                                                 <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
                                             </div>
@@ -1722,6 +1949,7 @@
                     
                 } catch (error) {
                     console.error('Search error:', error);
+                    showError('خطأ في البحث');
                 }
             });
             
