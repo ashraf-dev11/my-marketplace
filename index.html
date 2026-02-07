@@ -17,9 +17,6 @@
     
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
-    
-    <!-- Project Scripts -->
-    <script src="app.js" defer></script>
 </head>
 <body>
     <!-- الهيدر -->
@@ -37,10 +34,10 @@
                 <a href="admin/dashboard.html"><i class="fas fa-cog"></i> لوحة التحكم</a>
                 
                 <!-- معلومات المستخدم -->
-                <div id="user-info" style="display: none;"></div>
+                <div id="user-info" style="display: none; margin-right: 15px;"></div>
                 
                 <!-- أزرار التسجيل (تظهر للزوار) -->
-                <div class="auth-btn">
+                <div class="auth-btn" style="display: flex; gap: 10px;">
                     <a href="auth/register.html" class="btn-login">
                         <i class="fas fa-user-plus"></i> سجل مجاناً
                     </a>
@@ -132,30 +129,6 @@
         </div>
     </section>
 
-    <!-- لوحة اختبار Firebase (تظهر فقط للتطوير) -->
-    <div id="firebase-test-panel" style="position: fixed; bottom: 20px; right: 20px; z-index: 10000; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: none;">
-        <h4 style="margin-bottom: 10px; color: #333;">🔥 اختبار Firebase</h4>
-        <div style="display: flex; flex-direction: column; gap: 8px;">
-            <button onclick="testFirebaseConnection()" style="background: #2196F3; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                🔍 اختبار الاتصال
-            </button>
-            <button onclick="addTestProduct()" style="background: #4CAF50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                📦 إضافة منتج تجريبي
-            </button>
-            <button onclick="addTestUser()" style="background: #FF9800; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                👤 إضافة مستخدم تجريبي
-            </button>
-            <button onclick="document.getElementById('firebase-test-panel').style.display='none'" style="background: #f44336; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                ✖ إغلاق
-            </button>
-        </div>
-    </div>
-
-    <!-- زر إظهار لوحة الاختبار -->
-    <button onclick="document.getElementById('firebase-test-panel').style.display='block'" style="position: fixed; bottom: 20px; left: 20px; z-index: 9999; background: #FF9800; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); font-size: 20px;">
-        🔥
-    </button>
-
     <!-- الفوتر -->
     <footer>
         <div class="container">
@@ -204,8 +177,153 @@
         </div>
     </footer>
 
+    <!-- ============================================ -->
+    <!-- لوحة تحكم Firebase - تظهر في أسفل يسار الموقع -->
+    <!-- ============================================ -->
+
+    <!-- زر فتح لوحة التحكم (الدائرة البرتقالية) -->
+    <button onclick="showFirebasePanel()" 
+            id="firebase-panel-btn"
+            style="position: fixed; bottom: 20px; left: 20px; z-index: 9998; 
+                   background: #FF9800; color: white; border: none; 
+                   width: 50px; height: 50px; border-radius: 50%; 
+                   cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+                   font-size: 20px; display: flex; align-items: center; 
+                   justify-content: center; transition: transform 0.3s;"
+            onmouseover="this.style.transform='scale(1.1)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="تحكم في Firebase">
+        🔥
+    </button>
+
+    <!-- لوحة التحكم (مخفي في البداية) -->
+    <div id="firebase-control-panel" 
+         style="position: fixed; bottom: 80px; left: 20px; z-index: 9999; 
+                background: white; padding: 20px; border-radius: 15px; 
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3); width: 320px; 
+                display: none; border: 2px solid #FF9800;">
+        
+        <!-- عنوان اللوحة -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h4 style="margin: 0; color: #333; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-fire" style="color: #FF9800;"></i>
+                تحكم Firebase
+            </h4>
+            <button onclick="hideFirebasePanel()" 
+                    style="background: #f44336; color: white; border: none; 
+                           width: 32px; height: 32px; border-radius: 50%; 
+                           cursor: pointer; font-size: 18px; display: flex; 
+                           align-items: center; justify-content: center;">
+                ✕
+            </button>
+        </div>
+        
+        <!-- حالة الاتصال -->
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <div id="firebase-status-indicator" 
+                     style="width: 12px; height: 12px; border-radius: 50%; background: #ccc;"></div>
+                <span id="firebase-status-text" style="font-weight: bold;">جاري التحميل...</span>
+            </div>
+            <div style="font-size: 12px; color: #666;">
+                المشروع: <span id="firebase-project-id">my-marketplace-64afa</span>
+            </div>
+        </div>
+        
+        <!-- أزرار التحكم -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            <button onclick="testFirebaseConnection()" 
+                    class="firebase-btn" 
+                    style="background: #2196F3;">
+                <i class="fas fa-plug"></i> اختبار الاتصال
+            </button>
+            
+            <button onclick="createTestUser()" 
+                    class="firebase-btn" 
+                    style="background: #4CAF50;">
+                <i class="fas fa-user-plus"></i> مستخدم تجريبي
+            </button>
+            
+            <button onclick="addTestProduct()" 
+                    class="firebase-btn" 
+                    style="background: #FF9800;">
+                <i class="fas fa-box"></i> منتج تجريبي
+            </button>
+            
+            <button onclick="logoutUser()" 
+                    class="firebase-btn" 
+                    style="background: #f44336;">
+                <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+            </button>
+        </div>
+        
+        <!-- الإحصائيات -->
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px;">
+                <div>
+                    <div style="color: #666;">🔄 آخر تحديث</div>
+                    <div id="firebase-update-time" style="font-weight: bold;">--:--:--</div>
+                </div>
+                <div>
+                    <div style="color: #666;">📊 المنتجات</div>
+                    <div id="products-count-panel" style="font-weight: bold; color: #4CAF50;">0</div>
+                </div>
+                <div>
+                    <div style="color: #666;">👥 البائعين</div>
+                    <div id="vendors-count-panel" style="font-weight: bold; color: #2196F3;">0</div>
+                </div>
+                <div>
+                    <div style="color: #666;">💰 المبيعات</div>
+                    <div id="sales-count-panel" style="font-weight: bold; color: #FF9800;">$0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- أنماط CSS لأزرار Firebase -->
+    <style>
+        .firebase-btn {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .firebase-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .firebase-btn:active {
+            transform: translateY(0);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .firebase-btn.pulse {
+            animation: pulse 1s infinite;
+        }
+    </style>
+
+    <!-- JavaScript -->
     <script>
-        // وظائف عامة
+        // ============================================
+        // وظائف عامة للموقع
+        // ============================================
+        
         function toggleMenu() {
             const nav = document.querySelector('nav');
             nav.classList.toggle('active');
@@ -220,109 +338,362 @@
             if (timeElement) {
                 timeElement.textContent = `${dateStr} - ${timeStr}`;
             }
+            
+            // تحديث وقت لوحة Firebase
+            const updateTimeElement = document.getElementById('firebase-update-time');
+            if (updateTimeElement) {
+                updateTimeElement.textContent = timeStr;
+            }
         }
+        
+        // تحديث كل ثانية
         setInterval(updateTime, 1000);
         updateTime();
 
+        // ============================================
+        // وظائف لوحة تحكم Firebase
+        // ============================================
+        
+        let firebasePanelVisible = false;
+        
+        // إظهار لوحة التحكم
+        function showFirebasePanel() {
+            const panel = document.getElementById('firebase-control-panel');
+            const button = document.getElementById('firebase-panel-btn');
+            
+            if (panel) {
+                panel.style.display = 'block';
+                panel.style.animation = 'slideIn 0.3s ease';
+                firebasePanelVisible = true;
+                
+                // إخفاء الزر مؤقتاً
+                if (button) {
+                    button.style.opacity = '0.5';
+                    button.style.transform = 'scale(0.9)';
+                }
+                
+                // تحديث البيانات في اللوحة
+                updateFirebasePanel();
+            }
+        }
+        
+        // إخفاء لوحة التحكم
+        function hideFirebasePanel() {
+            const panel = document.getElementById('firebase-control-panel');
+            const button = document.getElementById('firebase-panel-btn');
+            
+            if (panel) {
+                panel.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    panel.style.display = 'none';
+                }, 300);
+                
+                firebasePanelVisible = false;
+                
+                // إعادة إظهار الزر
+                if (button) {
+                    button.style.opacity = '1';
+                    button.style.transform = 'scale(1)';
+                }
+            }
+        }
+        
+        // تحديث لوحة تحكم Firebase
+        function updateFirebasePanel() {
+            const statusIndicator = document.getElementById('firebase-status-indicator');
+            const statusText = document.getElementById('firebase-status-text');
+            
+            if (!statusIndicator || !statusText) return;
+            
+            // التحقق من حالة Firebase
+            if (window.firebaseReady === true) {
+                statusIndicator.style.background = '#4CAF50';
+                statusIndicator.style.boxShadow = '0 0 10px #4CAF50';
+                statusText.innerHTML = '<span style="color: #4CAF50;">✅ Firebase متصل</span>';
+                statusText.title = 'الاتصال نشط وجاهز للاستخدام';
+            } else if (window.firebaseReady === false) {
+                statusIndicator.style.background = '#f44336';
+                statusIndicator.style.boxShadow = '0 0 10px #f44336';
+                statusText.innerHTML = '<span style="color: #f44336;">❌ Firebase غير متصل</span>';
+                statusText.title = 'انقر على "اختبار الاتصال"';
+            } else {
+                statusIndicator.style.background = '#FF9800';
+                statusIndicator.style.boxShadow = '0 0 10px #FF9800';
+                statusText.innerHTML = '<span style="color: #FF9800;">🔄 جاري التحميل...</span>';
+                statusText.title = 'Firebase قيد التهيئة';
+            }
+            
+            // تحديث الإحصائيات
+            updateFirebaseStats();
+        }
+        
+        // تحديث إحصائيات Firebase
+        async function updateFirebaseStats() {
+            try {
+                if (window.firebaseReady && window.db) {
+                    // جلب عدد المنتجات
+                    const productsSnapshot = await window.db.collection('products')
+                        .where('status', '==', 'active')
+                        .get();
+                    
+                    // جلب عدد البائعين
+                    const vendorsSnapshot = await window.db.collection('vendors')
+                        .where('status', '==', 'active')
+                        .get();
+                    
+                    // تحديث الأرقام في اللوحة
+                    document.getElementById('products-count-panel').textContent = productsSnapshot.size;
+                    document.getElementById('vendors-count-panel').textContent = vendorsSnapshot.size;
+                    
+                    // تحديث الأرقام في الصفحة الرئيسية
+                    document.getElementById('products-count').textContent = productsSnapshot.size;
+                    document.getElementById('vendors-count').textContent = vendorsSnapshot.size;
+                    
+                    // حساب المبيعات (تخميني)
+                    let totalSales = 0;
+                    vendorsSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        totalSales += data.totalSales || 0;
+                    });
+                    
+                    document.getElementById('sales-count-panel').textContent = '$' + totalSales;
+                    document.getElementById('sales-count').textContent = '$' + totalSales;
+                }
+            } catch (error) {
+                console.log('⚠️ لا يمكن تحديث الإحصائيات:', error);
+            }
+        }
+        
+        // ============================================
+        // وظائف اختبار Firebase
+        // ============================================
+        
+        // اختبار اتصال Firebase
+        window.testFirebaseConnection = async function() {
+            const statusText = document.getElementById('firebase-status-text');
+            
+            if (statusText) {
+                statusText.innerHTML = '<span style="color: #FF9800;">🔄 جاري اختبار الاتصال...</span>';
+            }
+            
+            try {
+                // التحقق من وجود وظيفة testFirebaseConnection في firebase-config.js
+                if (typeof window.testFirebaseConnection === 'function') {
+                    const result = await window.testFirebaseConnection();
+                    
+                    if (result) {
+                        if (statusText) {
+                            statusText.innerHTML = '<span style="color: #4CAF50;">✅ الاختبار ناجح!</span>';
+                        }
+                        alert('🎉 مبروك! Firebase متصل بنجاح!\n\nيمكنك الآن:\n• تسجيل المستخدمين\n• إضافة المنتجات\n• استخدام قاعدة البيانات');
+                        
+                        // تحديث اللوحة
+                        setTimeout(updateFirebasePanel, 1000);
+                        
+                        return true;
+                    }
+                } else {
+                    // المحاولة اليدوية
+                    if (window.firebaseReady && window.db) {
+                        const testDoc = await window.db.collection('_tests').doc('connection').set({
+                            test: true,
+                            timestamp: new Date().toISOString(),
+                            host: window.location.hostname
+                        });
+                        
+                        alert('✅ Firebase يعمل بنجاح!');
+                        
+                        if (statusText) {
+                            statusText.innerHTML = '<span style="color: #4CAF50;">✅ متصل</span>';
+                        }
+                        
+                        return true;
+                    }
+                }
+            } catch (error) {
+                console.error('❌ فشل اختبار Firebase:', error);
+                
+                if (statusText) {
+                    statusText.innerHTML = '<span style="color: #f44336;">❌ فشل الاختبار</span>';
+                }
+                
+                alert(`❌ فشل اختبار Firebase:\n${error.message}\n\nتحقق من:\n1. اتصال الإنترنت\n2. ملف firebase-config.js\n3. Console للمزيد من التفاصيل`);
+                
+                return false;
+            }
+        };
+        
+        // إنشاء مستخدم تجريبي
+        window.createTestUser = async function() {
+            try {
+                // التحقق من اتصال Firebase
+                if (!window.firebaseReady) {
+                    const connected = await testFirebaseConnection();
+                    if (!connected) return;
+                }
+                
+                const email = `test${Date.now()}@example.com`;
+                const password = 'Test123456';
+                
+                // إنشاء المستخدم
+                const userCredential = await window.auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // حفظ البيانات الإضافية
+                await window.db.collection('users').doc(user.uid).set({
+                    email: email,
+                    name: 'مستخدم تجريبي',
+                    phone: '01000000000',
+                    userType: 'vendor',
+                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    status: 'active'
+                });
+                
+                // إنشاء متجر افتراضي
+                await window.db.collection('vendors').doc(user.uid).set({
+                    vendorId: user.uid,
+                    storeName: `متجر ${user.email.split('@')[0]}`,
+                    email: email,
+                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    status: 'active',
+                    plan: 'free'
+                });
+                
+                alert(`✅ تم إنشاء مستخدم تجريبي!\n\n📧 البريد: ${email}\n🔑 كلمة المرور: ${password}\n\nيمكنك تسجيل الدخول الآن.`);
+                
+                return userCredential;
+                
+            } catch (error) {
+                console.error('❌ خطأ في إنشاء المستخدم:', error);
+                alert(`❌ فشل إنشاء المستخدم:\n${error.message}`);
+                return null;
+            }
+        };
+        
+        // إضافة منتج تجريبي
+        window.addTestProduct = async function() {
+            try {
+                // التحقق من اتصال Firebase
+                if (!window.firebaseReady) {
+                    const connected = await testFirebaseConnection();
+                    if (!connected) return;
+                }
+                
+                const productData = {
+                    name: 'منتج تجريبي من Firebase',
+                    price: 99.99,
+                    category: 'إلكترونيات',
+                    description: 'هذا منتج تجريبي تم إضافته عبر موقع منصتي',
+                    vendorId: 'test-vendor',
+                    vendorName: 'متجر تجريبي',
+                    status: 'active',
+                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'],
+                    stock: 100,
+                    tags: ['تجريبي', 'إلكترونيات', 'جديد']
+                };
+                
+                const docRef = await window.db.collection('products').add(productData);
+                
+                alert(`✅ تم إضافة منتج تجريبي!\n\n🆔 المعرف: ${docRef.id}\n📦 المنتج: ${productData.name}\n💰 السعر: $${productData.price}`);
+                
+                // تحديث الإحصائيات
+                updateFirebaseStats();
+                
+                return docRef.id;
+                
+            } catch (error) {
+                console.error('❌ خطأ في إضافة المنتج:', error);
+                alert(`❌ فشل إضافة المنتج:\n${error.message}`);
+                return null;
+            }
+        };
+        
+        // تسجيل الخروج
+        window.logoutUser = function() {
+            if (!window.firebaseReady || !window.auth.currentUser) {
+                alert('⚠️ لا يوجد مستخدم مسجل حاليًا');
+                return;
+            }
+            
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                window.auth.signOut()
+                    .then(() => {
+                        alert('✅ تم تسجيل الخروج بنجاح');
+                        window.location.reload();
+                    })
+                    .catch((error) => {
+                        alert(`❌ خطأ في تسجيل الخروج:\n${error.message}`);
+                    });
+            }
+        };
+        
+        // ============================================
         // تحديث حالة النظام
+        // ============================================
+        
         function updateSystemStatus() {
             const statusElement = document.getElementById('system-status');
             const firebaseStatus = document.getElementById('firebase-status-text');
             
             if (statusElement) {
-                statusElement.innerHTML = '<span style="color: #4CAF50;">●</span> النظام يعمل';
-            }
-            
-            // تحديث حالة Firebase
-            if (firebaseStatus) {
-                if (isFirebaseReady && isFirebaseReady()) {
-                    firebaseStatus.innerHTML = 'Firebase: <span style="color: #4CAF50;">✅ متصل</span>';
+                if (window.firebaseReady === true) {
+                    statusElement.innerHTML = '<span style="color: #4CAF50;">●</span> النظام يعمل بشكل مثالي';
+                } else if (window.firebaseReady === false) {
+                    statusElement.innerHTML = '<span style="color: #f44336;">●</span> النظام يعمل (بدون Firebase)';
                 } else {
-                    firebaseStatus.innerHTML = 'Firebase: <span style="color: #f44336;">❌ غير متصل</span>';
+                    statusElement.innerHTML = '<span style="color: #FF9800;">●</span> جاري التحميل...';
                 }
             }
             
-            // تحديث الإحصائيات إذا كان Firebase متصل
-            if (isFirebaseReady && isFirebaseReady()) {
-                updateLiveStats();
+            // تحديث لوحة التحكم باستمرار
+            if (firebasePanelVisible) {
+                updateFirebasePanel();
             }
         }
-
-        // تحديث الإحصائيات الحية
-        async function updateLiveStats() {
-            try {
-                // هذه دالة تجريبية - سنطورها لاحقاً
-                document.getElementById('vendors-count').textContent = '3+';
-                document.getElementById('products-count').textContent = '50+';
-                document.getElementById('sales-count').textContent = '$1,250+';
-            } catch (error) {
-                console.log('جاري تحميل الإحصائيات...');
-            }
-        }
-
-        // دوال اختبار Firebase
-        async function addTestProduct() {
-            if (!isFirebaseReady || !isFirebaseReady()) {
-                alert('Firebase غير متصل!');
-                return;
-            }
-            
-            try {
-                const productData = {
-                    name: 'منتج تجريبي من موقعنا',
-                    price: 99.99,
-                    category: 'إلكترونيات',
-                    description: 'تم إضافة هذا المنتج عبر موقع منصتي',
-                    vendor: 'متجر تجريبي',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    status: 'active'
-                };
-                
-                await firebaseDB.collection('products').add(productData);
-                alert('✅ تم إضافة منتج تجريبي إلى Firebase!');
-                
-            } catch (error) {
-                alert('❌ خطأ: ' + error.message);
-            }
-        }
-
-        async function addTestUser() {
-            if (!isFirebaseReady || !isFirebaseReady()) {
-                alert('Firebase غير متصل!');
-                return;
-            }
-            
-            try {
-                const email = `test${Date.now()}@example.com`;
-                const password = 'test123456';
-                
-                const userCredential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
-                
-                // حفظ بيانات إضافية
-                await firebaseDB.collection('users').doc(userCredential.user.uid).set({
-                    email: email,
-                    name: 'مستخدم تجريبي',
-                    userType: 'vendor',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                alert(`✅ تم إنشاء مستخدم تجريبي:\nالبريد: ${email}\nكلمة المرور: test123456`);
-                
-            } catch (error) {
-                alert('❌ خطأ: ' + error.message);
-            }
-        }
-
+        
+        // ============================================
         // تهيئة الصفحة
+        // ============================================
+        
         document.addEventListener('DOMContentLoaded', function() {
-            updateSystemStatus();
-            setInterval(updateSystemStatus, 5000);
+            console.log('🚀 الصفحة الرئيسية محملة');
             
-            // إخفاء لوحة الاختبار بعد 10 ثواني
+            // تحديث حالة النظام كل 3 ثواني
+            setInterval(updateSystemStatus, 3000);
+            updateSystemStatus();
+            
+            // تحديث إحصائيات Firebase كل 10 ثواني
+            setInterval(updateFirebaseStats, 10000);
+            
+            // إخفاء زر Firebase بعد 30 ثانية إذا لم يكن هناك مشاكل
             setTimeout(() => {
-                const panel = document.getElementById('firebase-test-panel');
-                if (panel) panel.style.display = 'none';
-            }, 10000);
+                if (window.firebaseReady === true) {
+                    const firebaseBtn = document.getElementById('firebase-panel-btn');
+                    if (firebaseBtn) {
+                        firebaseBtn.style.opacity = '0.3';
+                        firebaseBtn.style.transition = 'opacity 2s';
+                    }
+                }
+            }, 30000);
+            
+            // إضافة أنماط CSS للرسوم المتحركة
+            if (!document.getElementById('panel-styles')) {
+                const style = document.createElement('style');
+                style.id = 'panel-styles';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(-20px); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(-20px); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
         });
     </script>
 </body>
