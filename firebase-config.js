@@ -1,4 +1,4 @@
-// إعدادات Firebase مع حلول للمشاكل
+// إعدادات Firebase مع حلول للتحميل
 const firebaseConfig = {
   apiKey: "AIzaSyBKNo5VBqNNEW0NffIop_Ufett-HOAQKkE",
   authDomain: "my-marketplace-64afa.firebaseapp.com",
@@ -8,150 +8,157 @@ const firebaseConfig = {
   appId: "1:607733189687:web:1566e5a81ec3d71ed603b2"
 };
 
-// حل مشكلة CORS لـ GitHub Pages
+// نظام متقدم للتعامل مع Firebase
 window.firebaseReady = false;
+window.firebaseInitAttempts = 0;
+window.maxFirebaseInitAttempts = 5;
 
-async function initializeFirebase() {
-  try {
-    // التحقق من وجود Firebase SDK
-    if (typeof firebase === 'undefined') {
-      console.error('❌ Firebase SDK لم يتم تحميله');
-      return false;
-    }
-    
-    // تهيئة Firebase
-    if (!firebase.apps.length) {
-      await firebase.initializeApp(firebaseConfig);
-      console.log('✅ Firebase initialized on', window.location.hostname);
-    }
-    
-    // تصدير الخدمات
-    window.firebaseAuth = firebase.auth();
-    window.firebaseDB = firebase.firestore();
-    window.firebaseStorage = firebase.storage();
-    
-    // تمكين المصادقة على GitHub Pages
-    if (window.location.hostname.includes('github.io')) {
-      firebase.auth().useDeviceLanguage();
-      console.log('🌐 تم تكييف Firebase لـ GitHub Pages');
-    }
-    
-    window.firebaseReady = true;
-    console.log('🚀 Firebase ready to use!');
-    
-    // عرض رسالة نجاح
-    showFirebaseStatus(true);
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Firebase initialization error:', error);
-    showFirebaseStatus(false, error.message);
-    return false;
-  }
+// الدالة الرئيسية
+function initializeFirebaseWithRetry() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            console.log(`🔄 محاولة تهيئة Firebase (المحاولة ${window.firebaseInitAttempts + 1})...`);
+            
+            // المحاولة الأولى: انتظار SDK
+            if (typeof firebase === 'undefined') {
+                console.warn('⚠️ Firebase SDK غير محمل، جاري الانتظار...');
+                
+                // انتظار 3 ثواني
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                if (typeof firebase === 'undefined') {
+                    throw new Error('Firebase SDK لم يتم تحميله بعد 3 ثواني');
+                }
+            }
+            
+            // المحاولة الثانية: التهيئة
+            if (!firebase.apps.length) {
+                try {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log('✅ تم تهيئة Firebase بنجاح');
+                } catch (initError) {
+                    if (initError.code === 'app/duplicate-app') {
+                        console.log('ℹ️ Firebase مثبت بالفعل');
+                    } else {
+                        throw initError;
+                    }
+                }
+            }
+            
+            // المحاولة الثالثة: تهيئة الخدمات
+            window.auth = firebase.auth();
+            window.db = firebase.firestore();
+            window.storage = firebase.storage();
+            window.firebaseInstance = firebase;
+            
+            window.firebaseReady = true;
+            console.log('🎉 Firebase جاهز للاستخدام!');
+            
+            resolve(true);
+            
+        } catch (error) {
+            window.firebaseInitAttempts++;
+            
+            if (window.firebaseInitAttempts < window.maxFirebaseInitAttempts) {
+                console.log(`⏳ فشل المحاولة ${window.firebaseInitAttempts}، جاري المحاولة مرة أخرى...`);
+                
+                // الانتظار قبل المحاولة التالية
+                setTimeout(() => {
+                    initializeFirebaseWithRetry().then(resolve).catch(reject);
+                }, 2000 * window.firebaseInitAttempts);
+                
+            } else {
+                console.error('❌ فشل جميع محاولات تهيئة Firebase');
+                window.firebaseReady = false;
+                reject(error);
+            }
+        }
+    });
 }
 
-// تشغيل التهيئة عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(initializeFirebase, 1000); // تأخير بسيط
+// التهيئة التلقائية
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('📄 الصفحة محملة - جاري بدء Firebase...');
+    
+    // طريقة 1: الانتظار لـ SDK
+    setTimeout(async () => {
+        try {
+            await initializeFirebaseWithRetry();
+            showFirebaseStatus('success', 'Firebase يعمل الآن!');
+            
+            // إعداد المستمعين
+            if (window.auth) {
+                window.auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        console.log('👤 مستخدم مسجل:', user.email);
+                        updateUIForUser(user);
+                    } else {
+                        console.log('👤 لا يوجد مستخدم مسجل');
+                        updateUIForVisitor();
+                    }
+                });
+            }
+            
+        } catch (error) {
+            console.error('❌ فشل نهائي في Firebase:', error);
+            showFirebaseStatus('error', `Firebase غير متصل: ${error.message}`);
+            
+            // وضع التطوير: السماح بالعمل بدون Firebase
+            console.log('⚠️ الموقع يعمل في وضع التطوير (بدون Firebase)');
+            showFirebaseStatus('warning', 'الموقع يعمل بدون قاعدة بيانات');
+        }
+    }, 1000);
 });
 
-// عرض حالة Firebase
-function showFirebaseStatus(success, message = '') {
-  const statusDiv = document.createElement('div');
-  statusDiv.id = 'firebase-status-message';
-  statusDiv.style.cssText = `
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    padding: 15px 20px;
-    border-radius: 8px;
-    color: white;
-    font-weight: bold;
-    z-index: 9999;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    animation: slideIn 0.5s ease;
-  `;
-  
-  if (success) {
-    statusDiv.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <i class="fas fa-check-circle" style="font-size: 20px;"></i>
-        <div>
-          <div style="font-size: 16px;">✅ Firebase متصل</div>
-          <div style="font-size: 12px; opacity: 0.8;">${window.location.hostname}</div>
-        </div>
-      </div>
-    `;
-    statusDiv.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
-  } else {
-    statusDiv.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <i class="fas fa-exclamation-triangle" style="font-size: 20px;"></i>
-        <div>
-          <div style="font-size: 16px;">⚠️ Firebase غير متصل</div>
-          <div style="font-size: 12px; opacity: 0.8;">${message || 'تحقق من الاتصال'}</div>
-        </div>
-      </div>
-    `;
-    statusDiv.style.background = 'linear-gradient(135deg, #f44336, #c62828)';
-  }
-  
-  // إضافة الأنماط إذا لم تكن موجودة
-  if (!document.getElementById('firebase-styles')) {
-    const style = document.createElement('style');
-    style.id = 'firebase-styles';
-    style.textContent = `
-      @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-      }
-      @keyframes slideOut {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-  }
-  
-  // إزالة الرسالة القديمة إذا وجدت
-  const oldStatus = document.getElementById('firebase-status-message');
-  if (oldStatus) oldStatus.remove();
-  
-  document.body.appendChild(statusDiv);
-  
-  // إخفاء الرسالة بعد 5 ثواني
-  setTimeout(() => {
-    if (statusDiv.parentNode) {
-      statusDiv.style.animation = 'slideOut 0.5s ease';
-      setTimeout(() => statusDiv.remove(), 500);
+// دوال مساعدة
+function showFirebaseStatus(type, message) {
+    console.log(`📢 حالة Firebase: ${message}`);
+    
+    // يمكنك إضافة عرض رسالة في الصفحة هنا
+    const statusElement = document.getElementById('firebase-status');
+    if (statusElement) {
+        statusElement.textContent = message;
+        statusElement.className = `firebase-status ${type}`;
     }
-  }, 5000);
 }
 
-// وظيفة اختبار اتصال Firebase
-window.testFirebaseConnection = async function() {
-  try {
-    if (!window.firebaseReady) {
-      const result = await initializeFirebase();
-      if (!result) {
-        alert('❌ فشل الاتصال بـ Firebase\nتحقق من:\n1. اتصال الإنترنت\n2. API Keys\n3. ملف firebase-config.js');
-        return false;
-      }
+// دالة اختبار متقدمة
+window.testFirebaseAdvanced = async function() {
+    console.log('🔍 اختبار متقدم لـ Firebase...');
+    
+    // اختبار 1: SDK
+    if (typeof firebase === 'undefined') {
+        return { success: false, step: 'sdk', message: 'Firebase SDK غير محمل' };
     }
     
-    // اختبار بسيط
-    const timestamp = firebase.firestore.FieldValue.serverTimestamp();
-    console.log('Firebase server time test:', timestamp);
+    // اختبار 2: التطبيق
+    if (!firebase.apps.length) {
+        return { success: false, step: 'app', message: 'Firebase غير مهيأ' };
+    }
     
-    alert(`✅ Firebase متصل بنجاح!\n\nمشروع: ${firebaseConfig.projectId}\nالدومين: ${window.location.hostname}`);
-    return true;
-    
-  } catch (error) {
-    console.error('Firebase test failed:', error);
-    alert(`❌ خطأ في Firebase:\n${error.message}`);
-    return false;
-  }
+    // اختبار 3: الخدمات
+    try {
+        const testAuth = firebase.auth();
+        const testDb = firebase.firestore();
+        
+        // اختبار بسيط
+        const timestamp = firebase.firestore.FieldValue.serverTimestamp();
+        
+        return { 
+            success: true, 
+            message: 'Firebase يعمل بشكل مثالي',
+            details: {
+                sdkVersion: firebase.SDK_VERSION,
+                projectId: firebaseConfig.projectId,
+                services: ['auth', 'firestore', 'storage']
+            }
+        };
+        
+    } catch (error) {
+        return { success: false, step: 'services', message: error.message };
+    }
 };
 
-// تصدير التهيئة للاستخدام
-window.initializeFirebaseApp = initializeFirebase;
+// تصدير
+window.initializeFirebase = initializeFirebaseWithRetry;
+window.getFirebaseStatus = () => window.firebaseReady;
