@@ -231,7 +231,7 @@
                 // حفظ البريد في localStorage
                 localStorage.setItem('adminEmail', email);
                 
-                // التحقق من صلاحيات المسؤول (يمكنك إضافة منطق إضافي هنا)
+                // التحقق من صلاحيات المسؤول
                 showToast('تم تسجيل الدخول بنجاح', 'success');
                 showDashboard(user);
             } catch (error) {
@@ -277,13 +277,14 @@
                                             <th class="text-right py-3 px-4">المنتج</th>
                                             <th class="text-right py-3 px-4">السعر</th>
                                             <th class="text-right py-3 px-4">المصدر</th>
+                                            <th class="text-right py-3 px-4">الربح المتوقع</th>
                                             <th class="text-right py-3 px-4">التاريخ</th>
                                             <th class="text-right py-3 px-4">الإجراءات</th>
                                         </tr>
                                     </thead>
                                     <tbody id="productsTable">
                                         <tr>
-                                            <td colspan="5" class="text-center py-8">
+                                            <td colspan="6" class="text-center py-8">
                                                 <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                                                 <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
                                             </td>
@@ -338,7 +339,7 @@
                 if (querySnapshot.empty) {
                     productsTable.innerHTML = `
                         <tr>
-                            <td colspan="5" class="text-center py-8 text-gray-500">
+                            <td colspan="6" class="text-center py-8 text-gray-500">
                                 لا توجد منتجات بعد
                             </td>
                         </tr>
@@ -351,36 +352,43 @@
                     const product = doc.data();
                     const productId = doc.id;
                     const date = product.createdAt ? product.createdAt.toDate().toLocaleDateString('ar-SA') : 'غير معروف';
+                    const expectedProfit = product.price * 0.2;
                     
                     productsHTML += `
                         <tr class="border-b border-gray-200 hover:bg-gray-50">
-                            <td class="py-3 px-4">
+                            <td class="py-4 px-4">
                                 <div class="flex items-center">
                                     <div class="ml-3">
-                                        <p class="font-semibold">${product.name}</p>
-                                        <p class="text-sm text-gray-500">${product.description || 'لا يوجد وصف'}</p>
+                                        <p class="font-semibold text-dark">${product.name}</p>
+                                        <p class="text-sm text-gray-500">${product.category}</p>
                                     </div>
                                 </div>
                             </td>
-                            <td class="py-3 px-4">
+                            <td class="py-4 px-4">
                                 <span class="font-bold text-primary">$${product.price}</span>
                                 ${product.originalPrice ? 
                                     `<br><span class="text-sm text-gray-500 line-through">$${product.originalPrice}</span>` : 
                                     ''
                                 }
                             </td>
-                            <td class="py-3 px-4">
+                            <td class="py-4 px-4">
                                 <span class="px-3 py-1 rounded-full text-sm ${product.source === 'amazon' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
                                     ${product.source === 'amazon' ? 'أمازون' : 'محلي'}
                                 </span>
                             </td>
-                            <td class="py-3 px-4 text-gray-600">${date}</td>
-                            <td class="py-3 px-4">
+                            <td class="py-4 px-4">
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-green-600">$${expectedProfit.toFixed(2)}</div>
+                                    <div class="text-xs text-gray-500">ربح البائع</div>
+                                </div>
+                            </td>
+                            <td class="py-4 px-4 text-gray-600">${date}</td>
+                            <td class="py-4 px-4">
                                 <div class="flex space-x-2 space-x-reverse">
-                                    <button onclick="editProduct('${productId}')" class="text-blue-600 hover:text-blue-800">
+                                    <button onclick="editProductPrompt('${productId}')" class="text-blue-600 hover:text-blue-800 p-2">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button onclick="deleteProduct('${productId}')" class="text-red-600 hover:text-red-800">
+                                    <button onclick="deleteProduct('${productId}')" class="text-red-600 hover:text-red-800 p-2">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </div>
@@ -391,9 +399,10 @@
                 
                 productsTable.innerHTML = productsHTML;
             } catch (error) {
+                console.error('Error loading products:', error);
                 productsTable.innerHTML = `
                     <tr>
-                        <td colspan="5" class="text-center py-8 text-red-500">
+                        <td colspan="6" class="text-center py-8 text-red-500">
                             خطأ في تحميل المنتجات
                         </td>
                     </tr>
@@ -444,11 +453,11 @@
                             </div>
                             <div class="flex space-x-6 space-x-reverse mt-4 text-center">
                                 <div>
-                                    <div class="text-lg font-bold text-primary">${store.products || 0}</div>
+                                    <div class="text-lg font-bold text-primary">${store.productsCount || 0}</div>
                                     <div class="text-sm text-gray-500">منتج</div>
                                 </div>
                                 <div>
-                                    <div class="text-lg font-bold text-secondary">${store.sales || 0}</div>
+                                    <div class="text-lg font-bold text-secondary">${store.salesCount || 0}</div>
                                     <div class="text-sm text-gray-500">مبيع</div>
                                 </div>
                             </div>
@@ -458,6 +467,7 @@
                 
                 storesList.innerHTML = storesHTML;
             } catch (error) {
+                console.error('Error loading stores:', error);
                 storesList.innerHTML = `
                     <div class="text-center py-8 text-red-500">
                         خطأ في تحميل المتاجر
@@ -499,6 +509,11 @@
                                         <i class="fas fa-calendar mr-3 ml-4"></i>
                                         <span>${date}</span>
                                     </div>
+                                    <div class="mt-3 text-sm">
+                                        <span class="text-gray-600">المتاجر: ${user.storesCount || 0}</span>
+                                        <span class="mr-4 ml-4">|</span>
+                                        <span class="text-gray-600">المبيعات: ${user.totalSales || 0}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -507,6 +522,7 @@
                 
                 usersList.innerHTML = usersHTML;
             } catch (error) {
+                console.error('Error loading users:', error);
                 usersList.innerHTML = `
                     <div class="text-center py-8 text-red-500">
                         خطأ في تحميل المستخدمين
@@ -538,10 +554,15 @@
             const source = document.getElementById('productSource').value;
             const link = document.getElementById('productLink').value;
             
+            if (!name || !price) {
+                showToast('يرجى تعبئة جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
             try {
                 showToast('جاري إضافة المنتج...');
                 
-                const productData = {
+                await db.collection('products').add({
                     name: name,
                     category: category,
                     price: price,
@@ -549,33 +570,48 @@
                     description: description,
                     source: source,
                     link: link || '',
+                    status: 'active',
+                    addedBy: auth.currentUser.uid,
+                    addedByRole: 'admin',
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    addedBy: auth.currentUser.uid
-                };
-                
-                await db.collection('products').add(productData);
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    profitMargin: 0.2,
+                    adminProfit: price * 0.05,
+                    expectedSellerProfit: price * 0.2
+                });
                 
                 showToast('تم إضافة المنتج بنجاح', 'success');
                 closeModal('addProductModal');
+                document.getElementById('addProductForm').reset();
                 loadProductsForAdmin();
                 
-                // إعادة تعيين النموذج
-                document.getElementById('addProductForm').reset();
             } catch (error) {
+                console.error('Error adding product:', error);
                 showToast('خطأ في إضافة المنتج', 'error');
             }
         }
 
         // حذف منتج
         async function deleteProduct(productId) {
-            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
-                try {
-                    await db.collection('products').doc(productId).delete();
-                    showToast('تم حذف المنتج', 'success');
-                    loadProductsForAdmin();
-                } catch (error) {
-                    showToast('خطأ في حذف المنتج', 'error');
-                }
+            if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                return;
+            }
+            
+            try {
+                showToast('جاري حذف المنتج...');
+                
+                await db.collection('products').doc(productId).update({
+                    status: 'deleted',
+                    deletedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    deletedBy: auth.currentUser.uid
+                });
+                
+                showToast('تم حذف المنتج بنجاح', 'success');
+                loadProductsForAdmin();
+                
+            } catch (error) {
+                console.error('Error deleting product:', error);
+                showToast('خطأ في حذف المنتج', 'error');
             }
         }
 
@@ -592,9 +628,100 @@
             }
         }
 
-        // تحرير منتج (مبدئي)
-        function editProduct(productId) {
-            showToast('ميزة التحرير قيد التطوير', 'info');
+        // تحرير منتج
+        async function editProductPrompt(productId) {
+            try {
+                const productDoc = await db.collection('products').doc(productId).get();
+                const product = productDoc.data();
+                
+                const editHTML = `
+                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                        <div class="bg-white rounded-xl max-w-2xl w-full p-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="text-2xl font-bold text-dark">تحرير المنتج</h3>
+                                <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700">
+                                    <i class="fas fa-times text-2xl"></i>
+                                </button>
+                            </div>
+                            <form id="editProductForm">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-gray-700 mb-2">اسم المنتج</label>
+                                        <input type="text" id="editProductName" value="${product.name}" 
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gray-700 mb-2">السعر ($)</label>
+                                        <input type="number" step="0.01" id="editProductPrice" value="${product.price}" 
+                                               class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-gray-700 mb-2">وصف المنتج</label>
+                                        <textarea id="editProductDescription" rows="3" 
+                                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg">${product.description || ''}</textarea>
+                                    </div>
+                                </div>
+                                <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
+                                    <button type="button" onclick="closeEditModal()" 
+                                            class="px-6 py-2 border border-gray-300 rounded-lg">إلغاء</button>
+                                    <button type="submit" 
+                                            class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                                        حفظ التغييرات
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                
+                const editElement = document.createElement('div');
+                editElement.innerHTML = editHTML;
+                editElement.id = 'editProductModal';
+                document.body.appendChild(editElement);
+                
+                document.getElementById('editProductForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    await updateProduct(productId);
+                });
+                
+            } catch (error) {
+                console.error('Error loading product for edit:', error);
+                showToast('خطأ في تحميل المنتج', 'error');
+            }
+        }
+
+        async function updateProduct(productId) {
+            const name = document.getElementById('editProductName').value;
+            const price = parseFloat(document.getElementById('editProductPrice').value);
+            const description = document.getElementById('editProductDescription').value;
+            
+            try {
+                showToast('جاري تحديث المنتج...');
+                
+                await db.collection('products').doc(productId).update({
+                    name: name,
+                    price: price,
+                    description: description,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    expectedSellerProfit: price * 0.2,
+                    adminProfit: price * 0.05
+                });
+                
+                showToast('تم تحديث المنتج بنجاح', 'success');
+                closeEditModal();
+                loadProductsForAdmin();
+                
+            } catch (error) {
+                console.error('Error updating product:', error);
+                showToast('خطأ في تحديث المنتج', 'error');
+            }
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editProductModal');
+            if (modal) {
+                document.body.removeChild(modal);
+            }
         }
 
         // عرض الإشعارات
