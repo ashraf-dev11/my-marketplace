@@ -7,399 +7,273 @@
     
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile-style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- IMPORTANT: Firebase SDKs - MUST BE LOADED FIRST -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
     
-    <!-- Firebase Configuration -->
-    <script src="firebase-config.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="منصة متاجر إلكترونية متكاملة مع Firebase - أنشئ متجرك واربح من أمازون">
+    <meta name="keywords" content="متاجر, تجارة إلكترونية, أمازون, عمولة, Firebase">
+    <meta name="author" content="منصتي">
 </head>
 <body>
-    <!-- Loading Indicator -->
-    <div id="firebase-loading" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255,255,255,0.9);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        z-index: 99999;
-        font-family: Arial;
-    ">
-        <div style="
-            width: 60px;
-            height: 60px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #4CAF50;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        "></div>
-        <div style="font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;">
-            جاري تهيئة النظام...
-        </div>
-        <div id="loading-status" style="color: #666; font-size: 14px;">
-            تحميل Firebase...
-        </div>
+    <!-- شاشة التحميل -->
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <p>جاري تحميل النظام...</p>
     </div>
 
     <!-- الهيدر -->
-    <header>
+    <header id="main-header">
         <div class="container">
             <div class="logo">
-                <i class="fas fa-store"></i>
+                <img src="assets/logo.png" alt="شعار منصتي" class="logo-img">
                 <span>منصتي</span>
             </div>
             
-            <nav>
-                <a href="#home"><i class="fas fa-home"></i> الرئيسية</a>
-                <a href="#features"><i class="fas fa-star"></i> المميزات</a>
-                <a href="#how-it-works"><i class="fas fa-play-circle"></i> كيف تعمل</a>
-                <a href="#pricing"><i class="fas fa-tag"></i> الأسعار</a>
+            <nav id="main-nav">
+                <a href="#home" class="nav-link active"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="#features" class="nav-link"><i class="fas fa-star"></i> المميزات</a>
+                <a href="#how-it-works" class="nav-link"><i class="fas fa-play-circle"></i> كيف تعمل</a>
+                <a href="#pricing" class="nav-link"><i class="fas fa-tag"></i> الأسعار</a>
                 
-                <!-- أزرار التسجيل -->
-                <div class="auth-btn" style="display: flex; gap: 10px;">
-                    <a href="javascript:void(0)" onclick="showRegisterAlert()" class="btn-login">
-                        <i class="fas fa-user-plus"></i> سجل مجاناً
-                    </a>
-                    <a href="javascript:void(0)" onclick="showLoginAlert()" class="btn-login" style="background: #4CAF50;">
-                        <i class="fas fa-sign-in-alt"></i> دخول
-                    </a>
+                <div class="nav-buttons" id="auth-buttons">
+                    <!-- سيتم تعبئتها بالجافاسكريبت -->
                 </div>
             </nav>
             
-            <button class="menu-toggle" onclick="toggleMenu()">
+            <button class="menu-toggle" id="mobile-menu-btn">
                 <i class="fas fa-bars"></i>
             </button>
         </div>
     </header>
 
     <!-- القسم الرئيسي -->
-    <section class="hero" id="home">
+    <section class="hero-section" id="home">
         <div class="container">
             <div class="hero-content">
-                <h1><span class="highlight">أنشئ متجرك الإلكتروني</span><br>واربح مع أمازون وبائعين آخرين</h1>
-                <p class="subtitle">منصة متكاملة تربح فيها من <strong>عمولة أمازون</strong> + <strong>اشتراكات البائعين</strong></p>
+                <h1 class="hero-title">
+                    <span class="highlight">أنشئ متجرك الإلكتروني</span>
+                    <br>واربح مع أمازون وبائعين آخرين
+                </h1>
                 
-                <div class="hero-buttons">
-                    <a href="javascript:void(0)" onclick="showRegisterAlert()" class="btn-primary">
-                        <i class="fas fa-rocket"></i> ابدأ الآن مجاناً
-                    </a>
-                    <button onclick="testFirebaseConnection()" class="btn-secondary">
-                        <i class="fas fa-plug"></i> اختبار Firebase
+                <p class="hero-subtitle">
+                    منصة متكاملة تربح فيها من 
+                    <strong class="amazon-highlight">عمولة أمازون</strong> + 
+                    <strong class="vendor-highlight">اشتراكات البائعين</strong>
+                </p>
+                
+                <div class="hero-actions">
+                    <button class="btn btn-primary btn-large" id="start-free-btn">
+                        <i class="fas fa-rocket"></i> ابدأ مجاناً الآن
+                    </button>
+                    <button class="btn btn-secondary btn-large" id="watch-demo-btn">
+                        <i class="fas fa-play-circle"></i> شاهد شرح الفيديو
                     </button>
                 </div>
 
-                <!-- إحصائيات -->
-                <div class="hero-stats">
-                    <div class="stat">
-                        <h3 id="vendors-count">0</h3>
-                        <p>بائع نشط</p>
+                <!-- إحصائيات حية -->
+                <div class="hero-stats" id="live-stats">
+                    <div class="stat-item">
+                        <h3 class="stat-number" id="total-vendors">0</h3>
+                        <p class="stat-label"><i class="fas fa-store"></i> بائع نشط</p>
                     </div>
-                    <div class="stat">
-                        <h3 id="products-count">0</h3>
-                        <p>منتج متاح</p>
+                    <div class="stat-item">
+                        <h3 class="stat-number" id="total-products">0</h3>
+                        <p class="stat-label"><i class="fas fa-box"></i> منتج متاح</p>
                     </div>
-                    <div class="stat">
-                        <h3 id="sales-count">$0</h3>
-                        <p>مبيعات</p>
+                    <div class="stat-item">
+                        <h3 class="stat-number" id="total-sales">$0</h3>
+                        <p class="stat-label"><i class="fas fa-chart-line"></i> مبيعات</p>
                     </div>
-                    <div class="stat">
-                        <h3>10%</h3>
-                        <p>عمولة أمازون</p>
+                    <div class="stat-item">
+                        <h3 class="stat-number">10%</h3>
+                        <p class="stat-label"><i class="fab fa-amazon"></i> عمولة أمازون</p>
                     </div>
                 </div>
             </div>
             
-            <div class="hero-image">
-                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&auto=format&fit=crop" alt="متجر إلكتروني">
+            <div class="hero-visual">
+                <img src="assets/hero-image.jpg" alt="لوحة تحكم المتجر" class="hero-image">
+                <div class="floating-card" id="demo-card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar"></i>
+                        <h4>متجر أحمد</h4>
+                    </div>
+                    <div class="card-body">
+                        <p>✅ 24 منتج نشط</p>
+                        <p>💰 $1,250 مبيعات</p>
+                        <p>📈 10% نمو أسبوعي</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- المميزات -->
-    <section class="features" id="features">
+    <section class="features-section" id="features">
         <div class="container">
-            <h2 class="section-title">لماذا تختار <span class="highlight">منصتي</span>؟</h2>
+            <h2 class="section-title">
+                لماذا تختار <span class="highlight">منصتي</span>؟
+                <span class="section-badge">الأفضل في السوق</span>
+            </h2>
             
             <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-fire"></i>
-                    </div>
-                    <h3>Firebase مجاني</h3>
-                    <p>قاعدة بيانات حقيقية مجانية من جوجل</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fab fa-amazon"></i>
-                    </div>
-                    <h3>أمازون مباشرة</h3>
-                    <p>استيراد منتجات وربح عمولة 10% فوراً</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="fas fa-money-bill-wave"></i>
-                    </div>
-                    <h3>ربح مزدوج</h3>
-                    <p>اربح من أمازون والبائعين معاً</p>
-                </div>
+                <!-- سيتم تعبئتها بالجافاسكريبت -->
             </div>
         </div>
     </section>
 
     <!-- كيف تعمل -->
-    <section class="how-it-works" id="how-it-works">
+    <section class="how-it-works-section" id="how-it-works">
         <div class="container">
-            <h2 class="section-title">كيف تعمل <span class="highlight">منصتي</span>؟</h2>
-            <p class="section-subtitle">4 خطوات بسيطة لتبدأ ربحك</p>
+            <h2 class="section-title">كيف تبدأ ربحك في 4 خطوات؟</h2>
             
-            <div class="steps">
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h3>سجل مجاناً</h3>
-                        <p>أنشئ حساب بائع في دقيقة واحدة</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h3>استورد من أمازون</h3>
-                        <p>اختر منتجات من أمازون واربح عمولة</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h3>انشر منتجاتك</h3>
-                        <p>عرض المنتجات في متجرك الخاص</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">4</div>
-                    <div class="step-content">
-                        <h3>اربح عمولات</h3>
-                        <p>اربح من أمازون ومن مبيعاتك</p>
-                    </div>
-                </div>
+            <div class="steps-timeline">
+                <!-- سيتم تعبئتها بالجافاسكريبت -->
+            </div>
+        </div>
+    </section>
+
+    <!-- خطط الأسعار -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <h2 class="section-title">خطط أسعار تناسب كل الأعمال</h2>
+            
+            <div class="pricing-switch">
+                <span>شهري</span>
+                <label class="switch">
+                    <input type="checkbox" id="pricing-toggle">
+                    <span class="slider"></span>
+                </label>
+                <span>سنوي <span class="discount-badge">وفر 20%</span></span>
+            </div>
+            
+            <div class="pricing-cards" id="pricing-cards">
+                <!-- سيتم تعبئتها بالجافاسكريبت -->
+            </div>
+        </div>
+    </section>
+
+    <!-- الأسئلة الشائعة -->
+    <section class="faq-section" id="faq">
+        <div class="container">
+            <h2 class="section-title">أسئلة متكررة</h2>
+            
+            <div class="faq-container">
+                <!-- سيتم تعبئتها بالجافاسكريبت -->
             </div>
         </div>
     </section>
 
     <!-- الفوتر -->
-    <footer>
+    <footer class="main-footer">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
-                    <h3><i class="fas fa-store"></i> منصتي</h3>
-                    <p>منصة تجارة إلكترونية متكاملة مع Firebase</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
+                    <div class="footer-logo">
+                        <img src="assets/logo.png" alt="شعار منصتي">
+                        <h3>منصتي</h3>
+                    </div>
+                    <p class="footer-description">
+                        منصة تجارة إلكترونية متكاملة تساعدك على إنشاء متجرك
+                        وربح عمولات من أمازون والمبيعات.
+                    </p>
+                    <div class="footer-social">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
                 
                 <div class="footer-col">
-                    <h3>حالة النظام</h3>
-                    <p id="system-status">جاري التحميل...</p>
-                    <button onclick="testFirebase()" style="
-                        background: #2196F3;
-                        color: white;
-                        border: none;
-                        padding: 8px 15px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        margin-top: 10px;
-                        width: 100%;
-                    ">
-                        <i class="fas fa-plug"></i> اختبار الاتصال
-                    </button>
+                    <h4 class="footer-title">روابط سريعة</h4>
+                    <ul class="footer-links">
+                        <li><a href="#home">الرئيسية</a></li>
+                        <li><a href="#features">المميزات</a></li>
+                        <li><a href="#how-it-works">كيف تعمل</a></li>
+                        <li><a href="#pricing">الأسعار</a></li>
+                        <li><a href="#faq">الأسئلة الشائعة</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4 class="footer-title">المنصات</h4>
+                    <ul class="footer-links">
+                        <li><a href="#" id="vendor-dashboard-link">لوحة البائع</a></li>
+                        <li><a href="#" id="admin-dashboard-link">لوحة التحكم</a></li>
+                        <li><a href="#" id="import-products-link">استيراد منتجات</a></li>
+                        <li><a href="#" id="sales-report-link">تقارير المبيعات</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-col">
+                    <h4 class="footer-title">النشرة البريدية</h4>
+                    <p class="footer-text">اشترك للحصول على آخر التحديثات والعروض</p>
+                    <form class="newsletter-form" id="newsletter-form">
+                        <input type="email" placeholder="بريدك الإلكتروني" required>
+                        <button type="submit">
+                            <i class="fas fa-paper-plane"></i> اشتراك
+                        </button>
+                    </form>
+                    <div class="footer-contact">
+                        <p><i class="fas fa-envelope"></i> info@my-platform.com</p>
+                        <p><i class="fas fa-phone"></i> +20 100 000 0000</p>
+                    </div>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>© 2024 منصتي. تم التطوير بـ Firebase.</p>
-                <p id="current-time">--:--:--</p>
+                <div class="footer-copyright">
+                    <p>© 2024 منصتي. جميع الحقوق محفوظة.</p>
+                    <p id="current-date">--/--/----</p>
+                </div>
+                
+                <div class="footer-extra">
+                    <p id="system-status"><i class="fas fa-circle"></i> جاري التحميل...</p>
+                    <button class="btn btn-small" id="firebase-test-btn">
+                        <i class="fas fa-plug"></i> اختبار Firebase
+                    </button>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- JavaScript -->
-    <script>
-        // ============================================
-        // وظائف عامة
-        // ============================================
-        
-        function toggleMenu() {
-            const nav = document.querySelector('nav');
-            nav.classList.toggle('active');
-        }
+    <!-- لوحة تحكم Firebase -->
+    <div id="firebase-control-panel">
+        <!-- سيتم إنشاؤها بالجافاسكريبت -->
+    </div>
 
-        // تحديث الوقت
-        function updateTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('ar-EG');
-            const dateStr = now.toLocaleDateString('ar-EG');
-            document.getElementById('current-time').textContent = `${dateStr} - ${timeStr}`;
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
+    <!-- الإشعارات -->
+    <div id="notification-container"></div>
 
-        // ============================================
-        // وظائف Firebase مبسطة
-        // ============================================
-        
-        async function testFirebaseConnection() {
-            const loadingStatus = document.getElementById('loading-status');
-            if (loadingStatus) {
-                loadingStatus.textContent = 'جاري اختبار Firebase...';
-            }
-            
-            try {
-                if (!window.firebaseReady) {
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-                
-                if (window.firebaseReady) {
-                    alert('✅ Firebase متصل بنجاح!\n\nالمشروع: my-marketplace-64afa\nالحالة: جاهز للاستخدام');
-                    
-                    // اختبار قاعدة البيانات
-                    if (window.db) {
-                        try {
-                            await window.db.collection('test').doc('connection').set({
-                                test: true,
-                                timestamp: new Date().toISOString()
-                            });
-                            alert('🎉 قاعدة البيانات تعمل بنجاح!');
-                        } catch (error) {
-                            console.log('⚠️ قاعدة البيانات قد تحتاج تعديل القواعد');
-                        }
-                    }
-                } else {
-                    alert('❌ Firebase غير متصل!\n\nالسبب: ' + (window.firebaseState.error || 'غير معروف'));
-                }
-            } catch (error) {
-                alert('❌ خطأ في الاختبار: ' + error.message);
-            }
-        }
-        
-        // ============================================
-        // إخفاء شاشة التحميل
-        // ============================================
-        function hideLoadingScreen() {
-            const loadingScreen = document.getElementById('firebase-loading');
-            if (loadingScreen) {
-                loadingScreen.style.display = 'none';
-            }
-        }
-        
-        // ============================================
-        // تحديث حالة النظام
-        // ============================================
-        function updateSystemStatus() {
-            const statusElement = document.getElementById('system-status');
-            if (!statusElement) return;
-            
-            if (window.firebaseReady) {
-                statusElement.innerHTML = '<span style="color: #4CAF50;">✅ النظام يعمل بشكل مثالي</span>';
-            } else if (window.firebaseState.error) {
-                statusElement.innerHTML = '<span style="color: #f44336;">❌ مشكلة في Firebase</span>';
-            } else {
-                statusElement.innerHTML = '<span style="color: #FF9800;">🔄 جاري التهيئة...</span>';
-            }
-        }
-        
-        // ============================================
-        // تهيئة الصفحة
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 الصفحة محملة');
-            
-            // تحديث حالة النظام كل 2 ثانية
-            setInterval(updateSystemStatus, 2000);
-            
-            // إخفاء شاشة التحميل بعد 5 ثواني
-            setTimeout(hideLoadingScreen, 5000);
-            
-            // مراقبة حالة Firebase
-            const checkFirebase = setInterval(() => {
-                if (window.firebaseReady) {
-                    console.log('✅ Firebase جاهز، تحديث الواجهة...');
-                    updateSystemStatus();
-                    hideLoadingScreen();
-                    
-                    // تحديث الإحصائيات
-                    setTimeout(() => {
-                        document.getElementById('vendors-count').textContent = '12';
-                        document.getElementById('products-count').textContent = '47';
-                        document.getElementById('sales-count').textContent = '$3,850';
-                    }, 1000);
-                    
-                    clearInterval(checkFirebase);
-                }
-            }, 1000);
-        });
-        
-        // ============================================
-        // دوال تجريبية
-        // ============================================
-        function showRegisterAlert() {
-            if (window.firebaseReady) {
-                alert('🎉 صفحة التسجيل قريباً!\n\nFirebase يعمل بنجاح ويمكنك البدء.');
-            } else {
-                alert('⚠️ Firebase غير متصل\n\nجاري إصلاح المشكلة...');
-                window.forceReconnect();
-            }
-        }
-        
-        function showLoginAlert() {
-            if (window.firebaseReady) {
-                alert('🔐 صفحة الدخول قريباً!\n\nيمكنك اختبار Firebase الآن.');
-            } else {
-                alert('❌ النظام غير جاهز بعد');
-            }
-        }
-        
-        // اختبار Firebase من Console
-        window.testFirebase = window.testFirebase || function() {
-            console.log('🔍 اختبار Firebase يدوياً...');
-            console.log('firebaseReady:', window.firebaseReady);
-            console.log('firebaseState:', window.firebaseState);
-            console.log('firebaseApp:', window.firebaseApp);
-            console.log('auth:', window.auth);
-            console.log('db:', window.db);
-            
-            if (window.firebaseReady) {
-                alert('✅ Firebase يعمل!');
-                return true;
-            } else {
-                alert('❌ Firebase غير متصل');
-                return false;
-            }
-        };
-    </script>
+    <!-- النماذج المنبثقة -->
+    <div id="modal-container"></div>
+
+    <!-- JavaScript Files -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+    <script src="auth.js"></script>
+    <script src="products.js"></script>
+    <script src="vendor-panel.js"></script>
+    <script src="admin-panel.js"></script>
     
-    <!-- أنماط CSS للتحميل -->
-    <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-    </style>
+    <!-- الصفحات الإضافية (لود عند الطلب) -->
+    <template id="vendor-dashboard-template">
+        <!-- قالب لوحة البائع -->
+    </template>
+    
+    <template id="admin-dashboard-template">
+        <!-- قالب لوحة التحكم -->
+    </template>
 </body>
 </html>
