@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
     
     <!-- Firebase Configuration -->
     <script src="firebase-config.js"></script>
@@ -129,6 +129,133 @@
         </div>
     </section>
 
+    <!-- كيف تعمل -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title">كيف تعمل <span class="highlight">منصتي</span>؟</h2>
+            <p class="section-subtitle">4 خطوات بسيطة لتبدأ ربحك</p>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>سجل مجاناً</h3>
+                        <p>أنشئ حساب بائع في دقيقة واحدة</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>استورد من أمازون</h3>
+                        <p>اختر منتجات من أمازون واربح عمولة</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>انشر منتجاتك</h3>
+                        <p>عرض المنتجات في متجرك الخاص</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>اربح عمولات</h3>
+                        <p>اربح من أمازون ومن مبيعاتك</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- خطط الأسعار -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <h2 class="section-title">خطط الأسعار</h2>
+            <p class="section-subtitle">اختر الخطة المناسبة لك</p>
+            
+            <div class="pricing-cards">
+                <div class="price-card">
+                    <div class="price-header">
+                        <h3>مجاني</h3>
+                        <div class="price">0$ <span>/شهر</span></div>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> 10 منتجات</li>
+                        <li><i class="fas fa-check"></i> لوحة تحكم أساسية</li>
+                        <li><i class="fas fa-times"></i> تقارير متقدمة</li>
+                        <li><i class="fas fa-times"></i> دعم فوري</li>
+                    </ul>
+                    <a href="auth/register.html" class="btn-price">ابدأ مجاناً</a>
+                </div>
+                
+                <div class="price-card popular">
+                    <div class="popular-badge">الأكثر شيوعاً</div>
+                    <div class="price-header">
+                        <h3>احترافي</h3>
+                        <div class="price">9.99$ <span>/شهر</span></div>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> 100 منتج</li>
+                        <li><i class="fas fa-check"></i> لوحة تحكم متقدمة</li>
+                        <li><i class="fas fa-check"></i> تقارير متقدمة</li>
+                        <li><i class="fas fa-check"></i> دعم فوري</li>
+                    </ul>
+                    <a href="auth/register.html" class="btn-price">اختر الاحترافي</a>
+                </div>
+                
+                <div class="price-card">
+                    <div class="price-header">
+                        <h3>أعمال</h3>
+                        <div class="price">29.99$ <span>/شهر</span></div>
+                    </div>
+                    <ul class="price-features">
+                        <li><i class="fas fa-check"></i> منتجات غير محدودة</li>
+                        <li><i class="fas fa-check"></i> جميع المميزات</li>
+                        <li><i class="fas fa-check"></i> دعم 24/7</li>
+                        <li><i class="fas fa-check"></i> تحليلات متقدمة</li>
+                    </ul>
+                    <a href="auth/register.html" class="btn-price">للشركات</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- اتصل بنا -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2>جاهز لبدء رحلتك؟</h2>
+            <p>انضم إلى آلاف البائعين الذين يربحون مع منصتي</p>
+            
+            <div class="contact-buttons">
+                <a href="auth/register.html" class="btn-contact">
+                    <i class="fas fa-rocket"></i> سجل مجاناً الآن
+                </a>
+                <a href="mailto:info@my-marketplace.com" class="btn-contact secondary">
+                    <i class="fas fa-envelope"></i> اتصل بنا
+                </a>
+            </div>
+            
+            <div class="contact-info">
+                <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <span>متاح 24/7</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-headset"></i>
+                    <span>دعم فني سريع</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>آمن 100%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- الفوتر -->
     <footer>
         <div class="container">
@@ -164,9 +291,12 @@
                 </div>
                 
                 <div class="footer-col">
-                    <h3>حالة النظام</h3>
-                    <p id="system-status">جاري التحميل...</p>
-                    <p id="firebase-status-text">Firebase: ❌ غير متصل</p>
+                    <h3>النشرة البريدية</h3>
+                    <p>اشترك للحصول على آخر التحديثات</p>
+                    <form class="newsletter-form">
+                        <input type="email" placeholder="بريدك الإلكتروني">
+                        <button type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </form>
                 </div>
             </div>
             
@@ -406,12 +536,12 @@
             if (!statusIndicator || !statusText) return;
             
             // التحقق من حالة Firebase
-            if (window.firebaseReady === true) {
+            if (window.firebaseReady && window.firebaseState.ready) {
                 statusIndicator.style.background = '#4CAF50';
                 statusIndicator.style.boxShadow = '0 0 10px #4CAF50';
                 statusText.innerHTML = '<span style="color: #4CAF50;">✅ Firebase متصل</span>';
                 statusText.title = 'الاتصال نشط وجاهز للاستخدام';
-            } else if (window.firebaseReady === false) {
+            } else if (window.firebaseState.error) {
                 statusIndicator.style.background = '#f44336';
                 statusIndicator.style.boxShadow = '0 0 10px #f44336';
                 statusText.innerHTML = '<span style="color: #f44336;">❌ Firebase غير متصل</span>';
@@ -430,7 +560,7 @@
         // تحديث إحصائيات Firebase
         async function updateFirebaseStats() {
             try {
-                if (window.firebaseReady && window.db) {
+                if (window.firebaseState.ready && window.db) {
                     // جلب عدد المنتجات
                     const productsSnapshot = await window.db.collection('products')
                         .where('status', '==', 'active')
@@ -442,12 +572,20 @@
                         .get();
                     
                     // تحديث الأرقام في اللوحة
-                    document.getElementById('products-count-panel').textContent = productsSnapshot.size;
-                    document.getElementById('vendors-count-panel').textContent = vendorsSnapshot.size;
+                    if (document.getElementById('products-count-panel')) {
+                        document.getElementById('products-count-panel').textContent = productsSnapshot.size;
+                    }
+                    if (document.getElementById('vendors-count-panel')) {
+                        document.getElementById('vendors-count-panel').textContent = vendorsSnapshot.size;
+                    }
                     
                     // تحديث الأرقام في الصفحة الرئيسية
-                    document.getElementById('products-count').textContent = productsSnapshot.size;
-                    document.getElementById('vendors-count').textContent = vendorsSnapshot.size;
+                    if (document.getElementById('products-count')) {
+                        document.getElementById('products-count').textContent = productsSnapshot.size;
+                    }
+                    if (document.getElementById('vendors-count')) {
+                        document.getElementById('vendors-count').textContent = vendorsSnapshot.size;
+                    }
                     
                     // حساب المبيعات (تخميني)
                     let totalSales = 0;
@@ -456,8 +594,12 @@
                         totalSales += data.totalSales || 0;
                     });
                     
-                    document.getElementById('sales-count-panel').textContent = '$' + totalSales;
-                    document.getElementById('sales-count').textContent = '$' + totalSales;
+                    if (document.getElementById('sales-count-panel')) {
+                        document.getElementById('sales-count-panel').textContent = '$' + totalSales;
+                    }
+                    if (document.getElementById('sales-count')) {
+                        document.getElementById('sales-count').textContent = '$' + totalSales;
+                    }
                 }
             } catch (error) {
                 console.log('⚠️ لا يمكن تحديث الإحصائيات:', error);
@@ -477,38 +619,24 @@
             }
             
             try {
-                // التحقق من وجود وظيفة testFirebaseConnection في firebase-config.js
-                if (typeof window.testFirebaseConnection === 'function') {
-                    const result = await window.testFirebaseConnection();
+                // المحاولة اليدوية
+                if (window.firebaseState.ready && window.db) {
+                    const testDoc = await window.db.collection('_tests').doc('connection').set({
+                        test: true,
+                        timestamp: new Date().toISOString(),
+                        host: window.location.hostname
+                    });
                     
-                    if (result) {
-                        if (statusText) {
-                            statusText.innerHTML = '<span style="color: #4CAF50;">✅ الاختبار ناجح!</span>';
-                        }
-                        alert('🎉 مبروك! Firebase متصل بنجاح!\n\nيمكنك الآن:\n• تسجيل المستخدمين\n• إضافة المنتجات\n• استخدام قاعدة البيانات');
-                        
-                        // تحديث اللوحة
-                        setTimeout(updateFirebasePanel, 1000);
-                        
-                        return true;
+                    alert('✅ Firebase يعمل بنجاح!');
+                    
+                    if (statusText) {
+                        statusText.innerHTML = '<span style="color: #4CAF50;">✅ متصل</span>';
                     }
+                    
+                    return true;
                 } else {
-                    // المحاولة اليدوية
-                    if (window.firebaseReady && window.db) {
-                        const testDoc = await window.db.collection('_tests').doc('connection').set({
-                            test: true,
-                            timestamp: new Date().toISOString(),
-                            host: window.location.hostname
-                        });
-                        
-                        alert('✅ Firebase يعمل بنجاح!');
-                        
-                        if (statusText) {
-                            statusText.innerHTML = '<span style="color: #4CAF50;">✅ متصل</span>';
-                        }
-                        
-                        return true;
-                    }
+                    alert('❌ Firebase غير مهيأ!');
+                    return false;
                 }
             } catch (error) {
                 console.error('❌ فشل اختبار Firebase:', error);
@@ -527,7 +655,7 @@
         window.createTestUser = async function() {
             try {
                 // التحقق من اتصال Firebase
-                if (!window.firebaseReady) {
+                if (!window.firebaseState.ready) {
                     const connected = await testFirebaseConnection();
                     if (!connected) return;
                 }
@@ -545,7 +673,7 @@
                     name: 'مستخدم تجريبي',
                     phone: '01000000000',
                     userType: 'vendor',
-                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    createdAt: window.firebaseApp.firestore.FieldValue.serverTimestamp(),
                     status: 'active'
                 });
                 
@@ -554,7 +682,7 @@
                     vendorId: user.uid,
                     storeName: `متجر ${user.email.split('@')[0]}`,
                     email: email,
-                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    createdAt: window.firebaseApp.firestore.FieldValue.serverTimestamp(),
                     status: 'active',
                     plan: 'free'
                 });
@@ -574,7 +702,7 @@
         window.addTestProduct = async function() {
             try {
                 // التحقق من اتصال Firebase
-                if (!window.firebaseReady) {
+                if (!window.firebaseState.ready) {
                     const connected = await testFirebaseConnection();
                     if (!connected) return;
                 }
@@ -587,8 +715,8 @@
                     vendorId: 'test-vendor',
                     vendorName: 'متجر تجريبي',
                     status: 'active',
-                    createdAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: window.firebaseInstance.firestore.FieldValue.serverTimestamp(),
+                    createdAt: window.firebaseApp.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: window.firebaseApp.firestore.FieldValue.serverTimestamp(),
                     images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'],
                     stock: 100,
                     tags: ['تجريبي', 'إلكترونيات', 'جديد']
@@ -612,7 +740,7 @@
         
         // تسجيل الخروج
         window.logoutUser = function() {
-            if (!window.firebaseReady || !window.auth.currentUser) {
+            if (!window.firebaseState.ready || !window.auth.currentUser) {
                 alert('⚠️ لا يوجد مستخدم مسجل حاليًا');
                 return;
             }
@@ -634,16 +762,15 @@
         // ============================================
         
         function updateSystemStatus() {
-            const statusElement = document.getElementById('system-status');
-            const firebaseStatus = document.getElementById('firebase-status-text');
+            const statusElement = document.querySelector('#firebase-status-text');
             
             if (statusElement) {
-                if (window.firebaseReady === true) {
-                    statusElement.innerHTML = '<span style="color: #4CAF50;">●</span> النظام يعمل بشكل مثالي';
-                } else if (window.firebaseReady === false) {
-                    statusElement.innerHTML = '<span style="color: #f44336;">●</span> النظام يعمل (بدون Firebase)';
+                if (window.firebaseState.ready) {
+                    statusElement.innerHTML = '<span style="color: #4CAF50;">✅ Firebase متصل</span>';
+                } else if (window.firebaseState.error) {
+                    statusElement.innerHTML = '<span style="color: #f44336;">❌ Firebase غير متصل</span>';
                 } else {
-                    statusElement.innerHTML = '<span style="color: #FF9800;">●</span> جاري التحميل...';
+                    statusElement.innerHTML = '<span style="color: #FF9800;">🔄 جاري التحميل...</span>';
                 }
             }
             
@@ -660,16 +787,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 الصفحة الرئيسية محملة');
             
+            // انتظار Firebase
+            window.firebaseReady.then(() => {
+                console.log('✅ Firebase جاهز للاستخدام');
+                updateSystemStatus();
+            }).catch((error) => {
+                console.error('❌ Firebase فشل:', error);
+                updateSystemStatus();
+            });
+            
             // تحديث حالة النظام كل 3 ثواني
             setInterval(updateSystemStatus, 3000);
-            updateSystemStatus();
             
             // تحديث إحصائيات Firebase كل 10 ثواني
             setInterval(updateFirebaseStats, 10000);
             
             // إخفاء زر Firebase بعد 30 ثانية إذا لم يكن هناك مشاكل
             setTimeout(() => {
-                if (window.firebaseReady === true) {
+                if (window.firebaseState.ready) {
                     const firebaseBtn = document.getElementById('firebase-panel-btn');
                     if (firebaseBtn) {
                         firebaseBtn.style.opacity = '0.3';
@@ -696,5 +831,8 @@
             }
         });
     </script>
+    
+    <!-- التطبيق الرئيسي -->
+    <script src="app.js"></script>
 </body>
 </html>
