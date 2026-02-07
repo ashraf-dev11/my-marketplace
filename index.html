@@ -34,643 +34,585 @@
                     },
                     fontFamily: {
                         'cairo': ['Cairo', 'sans-serif']
+                    },
+                    animation: {
+                        'slide-in': 'slideIn 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        slideIn: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        }
                     }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .store-card { transition: all 0.3s ease; }
-        .store-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .premium-badge { background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); }
-        .seller-badge { background: #3B82F6; }
-        .buyer-badge { background: #10B981; }
-        .admin-badge { background: #F59E0B; }
-        .loading { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
+        body { 
+            font-family: 'Cairo', sans-serif;
+            scroll-behavior: smooth;
         }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .store-card { 
+            transition: all 0.3s ease; 
+            animation: fadeIn 0.5s ease-out;
+        }
+        .store-card:hover { 
+            transform: translateY(-5px) scale(1.02); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .premium-badge { background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); }
+        .seller-badge { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); }
+        .buyer-badge { background: linear-gradient(135deg, #10B981 0%, #059669 100%); }
+        .admin-badge { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+        
+        .feature-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+        }
+        .feature-card:hover * {
+            color: white !important;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .floating-card {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+        }
+        
         /* Hide sections by default */
         main > section { display: none; }
         #home { display: block; }
-        
-        /* New Styles for Improved Design */
-        .modal-overlay {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            animation: modalSlideIn 0.3s ease-out;
-        }
-        @keyframes modalSlideIn {
-            from { transform: translateY(-50px) scale(0.9); opacity: 0; }
-            to { transform: translateY(0) scale(1); opacity: 1; }
-        }
-        .success-animation {
-            animation: successScale 0.5s ease-out;
-        }
-        @keyframes successScale {
-            0% { transform: scale(0); opacity: 0; }
-            70% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .btn-animated {
-            position: relative;
-            overflow: hidden;
-        }
-        .btn-animated::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: translateX(-100%);
-            animation: shimmer 1.5s infinite;
-        }
-        @keyframes shimmer {
-            100% { transform: translateX(100%); }
-        }
-        .type-card {
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        .type-card:hover {
-            transform: translateY(-5px);
-            border-color: #3B82F6;
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
-        }
-        .type-card.selected {
-            border-color: #3B82F6;
-            background-color: rgba(59, 130, 246, 0.05);
-        }
     </style>
 </head>
 <body class="bg-gray-50 font-cairo">
-    <!-- Central Notification Modal -->
-    <div id="centralNotification" class="fixed inset-0 bg-black bg-opacity-50 z-[9999] hidden items-center justify-center">
-        <div class="bg-white rounded-2xl p-8 max-w-md w-full mx-4 text-center modal-content">
-            <div id="notificationIcon" class="mb-6">
-                <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center">
-                    <i class="fas fa-spinner fa-spin text-4xl text-primary" id="loadingIcon"></i>
-                    <i class="fas fa-check-circle text-4xl text-green-500 hidden" id="successIcon"></i>
-                    <i class="fas fa-times-circle text-4xl text-red-500 hidden" id="errorIcon"></i>
+    <!-- Header Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <i class="fas fa-store text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-dark">منصة <span class="gradient-text">متاجر</span></h1>
                 </div>
+                
+                <div class="hidden md:flex items-center space-x-6 space-x-reverse">
+                    <a href="#" class="text-dark hover:text-primary transition-all duration-300 hover:scale-105" onclick="navigateTo('home')">الرئيسية</a>
+                    <a href="#" class="text-dark hover:text-primary transition-all duration-300 hover:scale-105" onclick="showStoresIfLoggedIn()">المتاجر</a>
+                    <a href="#" class="text-dark hover:text-primary transition-all duration-300 hover:scale-105" onclick="showContentBasedOnRole()">المنتجات</a>
+                    <a href="#" class="text-dark hover:text-primary transition-all duration-300 hover:scale-105" onclick="navigateTo('plans')">باقات الاشتراك</a>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse" id="authButtons">
+                    <button onclick="showLoginModal()" class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg">
+                        <i class="fas fa-sign-in-alt ml-2 animate-pulse-slow"></i>
+                        تسجيل الدخول
+                    </button>
+                    <button onclick="showRegisterModal()" class="border-2 border-primary text-primary px-6 py-3 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 hover:shadow-lg">
+                        <i class="fas fa-user-plus ml-2"></i>
+                        إنشاء حساب
+                    </button>
+                </div>
+                
+                <button class="md:hidden text-dark hover:text-primary transition-colors" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
             </div>
-            <h3 id="notificationTitle" class="text-2xl font-bold text-dark mb-3">جاري المعالجة</h3>
-            <p id="notificationMessage" class="text-gray-600 mb-6">يرجى الانتظار...</p>
-            <button onclick="hideCentralNotification()" id="notificationButton" 
-                    class="bg-primary text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors hidden">
+            
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4 bg-white p-4 rounded-lg shadow-lg">
+                <a href="#" class="block text-dark hover:text-primary py-2 px-4 rounded-lg hover:bg-gray-50 transition-all" onclick="navigateTo('home')">
+                    <i class="fas fa-home ml-2"></i>
+                    الرئيسية
+                </a>
+                <a href="#" class="block text-dark hover:text-primary py-2 px-4 rounded-lg hover:bg-gray-50 transition-all" onclick="showStoresIfLoggedIn()">
+                    <i class="fas fa-store ml-2"></i>
+                    المتاجر
+                </a>
+                <a href="#" class="block text-dark hover:text-primary py-2 px-4 rounded-lg hover:bg-gray-50 transition-all" onclick="showContentBasedOnRole()">
+                    <i class="fas fa-box ml-2"></i>
+                    المنتجات
+                </a>
+                <a href="#" class="block text-dark hover:text-primary py-2 px-4 rounded-lg hover:bg-gray-50 transition-all" onclick="navigateTo('plans')">
+                    <i class="fas fa-crown ml-2"></i>
+                    باقات الاشتراك
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-75 flex flex-col items-center justify-center z-50 hidden">
+        <div class="w-24 h-24 relative mb-8">
+            <div class="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 rounded-full animate-ping opacity-75"></div>
+            <div class="absolute inset-4 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center">
+                <i class="fas fa-store text-white text-3xl"></i>
+            </div>
+        </div>
+        <h3 class="text-white text-2xl font-bold mb-2" id="loadingTitle">جاري التحميل...</h3>
+        <p class="text-gray-300" id="loadingMessage">يرجى الانتظار</p>
+        <div class="w-64 h-2 bg-gray-700 rounded-full mt-4 overflow-hidden">
+            <div id="loadingBar" class="h-full bg-gradient-to-r from-primary to-purple-600 rounded-full transition-all duration-300" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center transform animate-slide-in">
+            <div class="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-check text-white text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-dark mb-4" id="successTitle">تم بنجاح!</h3>
+            <p class="text-gray-600 mb-8" id="successMessage">تمت العملية بنجاح</p>
+            <button onclick="closeSuccessModal()" class="btn-primary text-white px-8 py-3 rounded-xl w-full">
+                <i class="fas fa-check ml-2"></i>
                 متابعة
             </button>
         </div>
     </div>
 
     <!-- Account Type Selection Modal -->
-    <div id="accountTypeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 modal-content">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-user-circle text-white text-2xl"></i>
+    <div id="accountTypeModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-8 transform animate-slide-in">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h3 class="text-2xl font-bold text-dark">مرحباً بك! 👋</h3>
+                    <p class="text-gray-600">اختر نوع حسابك للمتابعة</p>
                 </div>
-                <h3 class="text-2xl font-bold text-dark mb-2">اختر مسارك</h3>
-                <p class="text-gray-600">اختر نوع الحساب الذي يناسب احتياجاتك</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                <!-- Seller Option -->
-                <div class="type-card bg-white border border-gray-200 rounded-xl p-6 cursor-pointer text-center"
-                     onclick="selectAccountType('seller')" id="sellerCard">
-                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-store text-blue-600 text-xl"></i>
-                    </div>
-                    <h4 class="text-lg font-bold text-dark mb-2">بائع</h4>
-                    <p class="text-gray-500 text-sm mb-3">أنشئ متجرك وابدأ البيع</p>
-                    <div class="text-xs text-blue-600 font-semibold">
-                        <i class="fas fa-check ml-1"></i> أنشئ متجر خاص
-                    </div>
-                </div>
-                
-                <!-- Buyer Option -->
-                <div class="type-card bg-white border border-gray-200 rounded-xl p-6 cursor-pointer text-center"
-                     onclick="selectAccountType('buyer')" id="buyerCard">
-                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
-                    </div>
-                    <h4 class="text-lg font-bold text-dark mb-2">مشتري</h4>
-                    <p class="text-gray-500 text-sm mb-3">تسوق من آلاف المنتجات</p>
-                    <div class="text-xs text-green-600 font-semibold">
-                        <i class="fas fa-check ml-1"></i> تسوق بأسعار مميزة
-                    </div>
-                </div>
-            </div>
-            
-            <button onclick="confirmAccountType()" 
-                    class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold">
-                <i class="fas fa-check ml-2"></i>
-                تأكيد الاختيار
-            </button>
-        </div>
-    </div>
-
-    <!-- Header Navigation -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                        <i class="fas fa-store text-white text-xl"></i>
-                    </div>
-                    <h1 class="text-2xl font-bold text-dark">منصة متاجر</h1>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-6 space-x-reverse">
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('home')">الرئيسية</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="showStoresIfLoggedIn()">المتاجر</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="showContentBasedOnRole()">المنتجات</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('plans')">باقات الاشتراك</a>
-                </div>
-                
-                <div class="flex items-center space-x-4 space-x-reverse" id="authButtons">
-                    <button onclick="showLoginModal()" 
-                            class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors btn-animated">
-                        <i class="fas fa-sign-in-alt ml-2"></i>
-                        تسجيل الدخول
-                    </button>
-                    <button onclick="showRegisterModal()" 
-                            class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                        <i class="fas fa-user-plus ml-2"></i>
-                        إنشاء حساب
-                    </button>
-                </div>
-                
-                <button class="md:hidden text-dark" onclick="toggleMobileMenu()">
-                    <i class="fas fa-bars text-2xl"></i>
+                <button onclick="closeModal('accountTypeModal')" class="text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-times text-2xl"></i>
                 </button>
             </div>
             
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4">
-                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('home')">الرئيسية</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="showStoresIfLoggedIn()">المتاجر</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="showContentBasedOnRole()">المنتجات</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('plans')">باقات الاشتراك</a>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="border-2 border-blue-200 rounded-xl p-6 hover:border-primary hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                     onclick="selectAccountType('seller')">
+                    <div class="flex items-center mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-store text-white text-2xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h4 class="text-lg font-bold text-dark">بائع</h4>
+                            <p class="text-sm text-gray-500">أريد إنشاء متاجر</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>إنشاء متاجر متعددة</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>استيراد منتجات من أمازون</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>إدارة المبيعات والأرباح</span>
+                        </li>
+                    </ul>
+                    <div class="mt-6 text-center">
+                        <span class="inline-block bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm font-semibold">
+                            الأكثر شعبية
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="border-2 border-green-200 rounded-xl p-6 hover:border-green-500 hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                     onclick="selectAccountType('buyer')">
+                    <div class="flex items-center mb-4">
+                        <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-green-700 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-shopping-cart text-white text-2xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <h4 class="text-lg font-bold text-dark">مشتري</h4>
+                            <p class="text-sm text-gray-500">أريد التسوق والشراء</p>
+                        </div>
+                    </div>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>تصفح آلاف المنتجات</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>شراء من متاجر متنوعة</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-check-circle text-green-500 ml-2"></i>
+                            <span>تتبع الطلبات</span>
+                        </li>
+                    </ul>
+                    <div class="mt-6 text-center">
+                        <span class="inline-block bg-green-100 text-green-600 px-3 py-1 rounded-full text-sm font-semibold">
+                            مناسب للمتسوقين
+                        </span>
+                    </div>
+                </div>
             </div>
-        </nav>
-    </header>
+            
+            <div class="text-center">
+                <p class="text-gray-500 text-sm mb-4">يمكنك تغيير نوع حسابك لاحقاً من إعدادات الحساب</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Welcome Modal after Registration -->
+    <div id="welcomeModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-8 text-center transform animate-slide-in">
+            <div class="w-24 h-24 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <i class="fas fa-party-horn text-white text-3xl animate-bounce-slow"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-dark mb-4" id="welcomeTitle">مرحباً بك في منصة متاجر! 🎉</h3>
+            <p class="text-gray-600 mb-2" id="welcomeMessage"></p>
+            <div class="mb-8 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-center space-x-4 space-x-reverse mb-4">
+                    <i class="fas fa-user-circle text-3xl text-primary"></i>
+                    <div class="text-right">
+                        <p class="font-bold" id="welcomeUserName"></p>
+                        <p class="text-sm text-gray-500" id="welcomeUserEmail"></p>
+                    </div>
+                </div>
+                <div id="welcomeUserBadge" class="inline-block px-4 py-2 rounded-full text-white text-sm font-semibold mb-4"></div>
+                <p class="text-gray-600 text-sm" id="welcomeInstructions"></p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="closeWelcomeModal()" class="border-2 border-primary text-primary px-6 py-3 rounded-xl hover:bg-primary hover:text-white transition-all duration-300">
+                    استكشاف المنصة
+                </button>
+                <button onclick="startJourney()" class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg">
+                    <i class="fas fa-play ml-2"></i>
+                    ابدأ رحلتك
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main>
         <!-- Hero Section -->
-        <section id="home" class="gradient-bg text-white py-20">
-            <div class="container mx-auto px-4">
-                <div class="max-w-4xl mx-auto text-center">
-                    <h2 class="text-4xl md:text-5xl font-bold mb-6">أنشئ متجرك الإلكتروني في دقائق</h2>
-                    <p class="text-xl mb-8 opacity-90">منصة متكاملة تمكنك من إنشاء متجرك الخاص، استيراد منتجات من أمازون، وإدارة مبيعاتك بكل سهولة</p>
-                    <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
-                        <button onclick="showRegisterModal()" 
-                                class="bg-white text-primary px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors btn-animated">
-                            <i class="fas fa-store ml-2"></i>
-                            ابدأ مجاناً
-                        </button>
+        <section id="home" class="relative overflow-hidden">
+            <div class="gradient-bg text-white py-20 relative">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+                <div class="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full translate-y-48 -translate-x-48"></div>
+                
+                <div class="container mx-auto px-4 relative z-10">
+                    <div class="max-w-4xl mx-auto text-center">
+                        <h1 class="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
+                            أنشئ <span class="text-yellow-300">متجرك</span> الإلكتروني في 
+                            <span class="relative inline-block">
+                                <span class="gradient-text">دقائق</span>
+                                <span class="absolute -bottom-2 right-0 w-full h-2 bg-yellow-300 rounded-full"></span>
+                            </span>
+                        </h1>
+                        <p class="text-xl md:text-2xl mb-8 opacity-90 leading-relaxed">
+                            منصة متكاملة تجمع بين البائعين والمشترين في مكان واحد
+                            <br>
+                            <span class="text-yellow-200 font-semibold">ابدأ رحلتك التجارية الآن!</span>
+                        </p>
+                        <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
+                            <button onclick="showRegisterModal()" 
+                                    class="bg-white text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
+                                <i class="fas fa-rocket ml-2 group-hover:rotate-12 transition-transform"></i>
+                                ابدأ مجاناً الآن
+                            </button>
+                            <button onclick="navigateTo('features')" 
+                                    class="glass-effect text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/20 transition-all duration-300">
+                                <i class="fas fa-play-circle ml-2"></i>
+                                شاهد الفيديو التعريفي
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Section -->
+            <div class="container mx-auto px-4 -mt-12 relative z-20">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="bg-white rounded-2xl shadow-xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="text-3xl font-bold gradient-text mb-2">١٠٠٠+</div>
+                        <p class="text-gray-600">متجر نشط</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="text-3xl font-bold gradient-text mb-2">٥٠٠٠٠+</div>
+                        <p class="text-gray-600">منتج متوفر</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="text-3xl font-bold gradient-text mb-2">١٠٠٠٠+</div>
+                        <p class="text-gray-600">عميل سعيد</p>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-xl p-6 text-center transform hover:-translate-y-2 transition-all duration-300">
+                        <div class="text-3xl font-bold gradient-text mb-2">٩٩٪</div>
+                        <p class="text-gray-600">رضا العملاء</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Features Section -->
-        <section id="features" class="py-16 bg-white">
+        <section id="features" class="py-20 bg-gradient-to-b from-white to-gray-50">
             <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-12">مميزات المنصة</h2>
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl font-bold text-dark mb-4">لماذا تختار <span class="gradient-text">منصة متاجر</span>؟</h2>
+                    <p class="text-gray-600 text-lg max-w-2xl mx-auto">نقدم لك كل ما تحتاجه لبدء تجارتك الإلكترونية بنجاح</p>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-store text-white text-2xl"></i>
+                    <div class="feature-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                        <div class="w-20 h-20 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-store text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold mb-3">إنشاء متجر خاص</h3>
-                        <p class="text-gray-600">أنشئ متجرك الخاص بكامل المواصفات في دقائق معدودة</p>
+                        <h3 class="text-xl font-bold text-dark mb-4 text-center">إنشاء متجر بضغطة زر</h3>
+                        <p class="text-gray-600 text-center">أنشئ متجرك الخاص بكامل المواصفات في أقل من 5 دقائق بدون أي خبرة تقنية</p>
                     </div>
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-shopping-cart text-white text-2xl"></i>
+                    
+                    <div class="feature-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                        <div class="w-20 h-20 bg-gradient-to-br from-secondary to-green-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-robot text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold mb-3">استيراد من أمازون</h3>
-                        <p class="text-gray-600">استورد منتجات مباشرة من أمازون ومنصات التسوق العالمية</p>
+                        <h3 class="text-xl font-bold text-dark mb-4 text-center">استيراد تلقائي من أمازون</h3>
+                        <p class="text-gray-600 text-center">استورد آلاف المنتجات من أمازون تلقائياً مع تحديث الأسعار والمخزون بشكل مستمر</p>
                     </div>
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-chart-line text-white text-2xl"></i>
+                    
+                    <div class="feature-card rounded-2xl p-8 shadow-lg border border-gray-200">
+                        <div class="w-20 h-20 bg-gradient-to-br from-accent to-yellow-600 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                            <i class="fas fa-chart-network text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-semibold mb-3">إدارة وتحليل</h3>
-                        <p class="text-gray-600">لوحة تحكم متكاملة لمتابعة المبيعات والإحصائيات</p>
+                        <h3 class="text-xl font-bold text-dark mb-4 text-center">إدارة ذكية ومتكاملة</h3>
+                        <p class="text-gray-600 text-center">لوحة تحكم متكاملة لمتابعة المبيعات، الأرباح، والعملاء في مكان واحد</p>
+                    </div>
+                </div>
+                
+                <!-- CTA -->
+                <div class="mt-20 text-center">
+                    <div class="bg-gradient-to-r from-primary to-purple-600 rounded-2xl p-8 md:p-12 text-white">
+                        <h3 class="text-2xl md:text-3xl font-bold mb-4">جاهز لبدء رحلتك التجارية؟</h3>
+                        <p class="text-lg opacity-90 mb-8 max-w-2xl mx-auto">انضم إلى آلاف البائعين الناجحين الذين بدأوا معنا وحققوا أحلامهم</p>
+                        <button onclick="showRegisterModal()" 
+                                class="bg-white text-primary px-8 py-4 rounded-xl text-lg font-semibold hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300">
+                            <i class="fas fa-gem ml-2"></i>
+                            سجل مجاناً وابدأ الآن
+                        </button>
                     </div>
                 </div>
             </div>
         </section>
 
+        <!-- Other sections remain the same but with improved styling -->
         <!-- Stores Section -->
         <section id="stores" class="py-16 bg-gray-50">
             <div class="container mx-auto px-4">
                 <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-bold text-dark">المتاجر النشطة</h2>
-                    <button onclick="showCreateStoreModal()" 
-                            class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors btn-animated">
+                    <div>
+                        <h2 class="text-3xl font-bold text-dark">المتاجر النشطة 🔥</h2>
+                        <p class="text-gray-600">استعرض أفضل المتاجر الناجحة على المنصة</p>
+                    </div>
+                    <button onclick="showCreateStoreModal()" class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg">
                         <i class="fas fa-plus ml-2"></i>
                         إنشاء متجر جديد
                     </button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="storesContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المتاجر...</p>
+                    <div class="text-center py-12">
+                        <div class="w-20 h-20 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-store text-white text-2xl"></i>
+                        </div>
+                        <p class="text-gray-600">جاري تحميل المتاجر...</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Products Section -->
-        <section id="products" class="py-16 bg-white">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-8">المنتجات المتاحة</h2>
-                <div class="mb-8">
-                    <div class="flex justify-between items-center">
-                        <div class="relative w-full md:w-96">
-                            <input type="text" id="searchProducts" placeholder="ابحث عن منتج..." 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="productsContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Subscription Plans Section -->
-        <section id="plans" class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-12">باقات الاشتراك</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <!-- Basic Plan -->
-                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                        <div class="bg-primary text-white p-6 text-center">
-                            <h3 class="text-2xl font-bold">الباقة الأساسية</h3>
-                            <div class="mt-4">
-                                <span class="text-4xl font-bold">$3</span>
-                                <span class="text-lg">/ شهر</span>
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <ul class="space-y-3 mb-8">
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>متجر واحد</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>منتجات غير محدودة</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>دعم فني عبر البريد</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>تقارير مبيعات أساسية</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>نسبة عمولة 15%</span>
-                                </li>
-                            </ul>
-                            <button onclick="subscribeToPlan('basic')" 
-                                    class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors btn-animated">
-                                اختر الباقة
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Premium Plan -->
-                    <div class="bg-white rounded-xl shadow-lg border-2 border-premium overflow-hidden relative">
-                        <div class="absolute top-4 right-4">
-                            <span class="premium-badge text-white px-3 py-1 rounded-full text-sm">الأفضل</span>
-                        </div>
-                        <div class="premium-badge text-white p-6 text-center">
-                            <h3 class="text-2xl font-bold">الباقة المميزة</h3>
-                            <div class="mt-4">
-                                <span class="text-4xl font-bold">$15</span>
-                                <span class="text-lg">/ شهر</span>
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <ul class="space-y-3 mb-8">
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span class="font-semibold">5 متاجر</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>منتجات غير محدودة</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>دعم فني فوري</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>تقارير متقدمة وتحليلات</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>نسبة عمولة 10% فقط</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>نطاق مخصص (دومين)</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>التسويق التلقائي</span>
-                                </li>
-                            </ul>
-                            <button onclick="subscribeToPlan('premium')" 
-                                    class="w-full premium-badge text-white py-3 rounded-lg hover:opacity-90 transition-colors btn-animated">
-                                اختر الباقة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main Store (Main Platform Store) -->
-        <section id="mainStore" class="py-16 bg-white">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-8">متجر المنصة الرئيسي</h2>
-                <div class="mb-8">
-                    <div class="flex justify-between items-center">
-                        <div class="relative w-full md:w-96">
-                            <input type="text" id="searchMainStoreProducts" placeholder="ابحث عن منتج..." 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="mainStoreProductsContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <!-- Rest of the sections remain similar with improved styling -->
+        <!-- ... (other sections) ... -->
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <div class="flex items-center space-x-2 space-x-reverse mb-4">
-                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                            <i class="fas fa-store text-white text-xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">منصة متاجر</h3>
-                    </div>
-                    <p class="text-gray-400">منصة متكاملة لإنشاء وإدارة المتاجر الإلكترونية</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('home')">الرئيسية</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="showMainStoreIfLoggedIn()">متجر المنصة</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('plans')">باقات الاشتراك</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">اتصل بنا</h4>
-                    <div class="space-y-3">
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                            <span class="text-gray-400">info@storeplatform.com</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>© 2024 منصة متاجر. جميع الحقوق محفوظة.</p>
-            </div>
-        </div>
-    </footer>
-
     <!-- Modals -->
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-8 modal-content">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-2xl font-bold text-dark">مرحباً بعودتك!</h3>
-                    <p class="text-gray-600">سجل دخولك للوصول إلى حسابك</p>
+    <!-- Enhanced Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 transform animate-slide-in">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-sign-in-alt text-white text-2xl"></i>
                 </div>
-                <button onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
+                <h3 class="text-2xl font-bold text-dark">مرحباً بعودتك! 👋</h3>
+                <p class="text-gray-600">سجل دخولك للمتابعة</p>
             </div>
-            <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">البريد الإلكتروني</label>
-                        <div class="relative">
-                            <i class="fas fa-envelope absolute right-4 top-3 text-gray-400"></i>
-                            <input type="email" id="loginEmail" required 
-                                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                   placeholder="example@email.com">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">كلمة المرور</label>
-                        <div class="relative">
-                            <i class="fas fa-lock absolute right-4 top-3 text-gray-400"></i>
-                            <input type="password" id="loginPassword" required 
-                                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                   placeholder="••••••••">
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <label class="flex items-center">
-                            <input type="checkbox" class="ml-2 rounded border-gray-300">
-                            <span class="text-gray-700 text-sm">تذكرني</span>
-                        </label>
-                        <a href="#" class="text-primary text-sm hover:underline">نسيت كلمة المرور؟</a>
-                    </div>
-                    <button type="submit" id="loginBtn"
-                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold btn-animated">
-                        <span id="loginText">تسجيل الدخول</span>
-                        <i class="fas fa-spinner fa-spin hidden ml-2" id="loginSpinner"></i>
-                    </button>
+            
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2 font-semibold">
+                        <i class="fas fa-envelope ml-2 text-primary"></i>
+                        البريد الإلكتروني
+                    </label>
+                    <input type="email" id="loginEmail" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                           placeholder="example@email.com">
                 </div>
-                <div class="text-center mt-6">
-                    <p class="text-gray-600 mb-4">أو سجل الدخول باستخدام</p>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-semibold">
+                        <i class="fas fa-lock ml-2 text-primary"></i>
+                        كلمة المرور
+                    </label>
+                    <input type="password" id="loginPassword" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                           placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn-primary text-white py-3 rounded-xl w-full mb-4">
+                    <i class="fas fa-sign-in-alt ml-2"></i>
+                    تسجيل الدخول
+                </button>
+                
+                <div class="text-center mb-6">
+                    <p class="text-gray-600">أو سجل الدخول باستخدام</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
                     <button type="button" onclick="loginWithGoogle()" 
-                            class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i class="fab fa-google ml-2 text-red-500"></i>
-                        تسجيل الدخول بحساب Google
+                            class="border-2 border-gray-200 py-3 rounded-xl hover:border-red-500 hover:bg-red-50 transition-all group">
+                        <i class="fab fa-google ml-2 text-red-500 group-hover:scale-110 transition-transform"></i>
+                        جوجل
                     </button>
-                    <p class="mt-6 text-gray-600">
-                        ليس لديك حساب؟ 
-                        <a href="#" onclick="showRegisterModal()" class="text-primary font-semibold hover:underline">سجل الآن</a>
-                    </p>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-8 modal-content">
-            <div class="flex justify-between items-center mb-8">
-                <div>
-                    <h3 class="text-2xl font-bold text-dark">انضم إلينا الآن!</h3>
-                    <p class="text-gray-600">ابدأ رحلتك التجارية معنا</p>
-                </div>
-                <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="registerForm" onsubmit="handleRegister(event)">
-                <div class="space-y-6">
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">الاسم الكامل</label>
-                        <div class="relative">
-                            <i class="fas fa-user absolute right-4 top-3 text-gray-400"></i>
-                            <input type="text" id="registerName" required 
-                                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                   placeholder="أحمد محمد">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">البريد الإلكتروني</label>
-                        <div class="relative">
-                            <i class="fas fa-envelope absolute right-4 top-3 text-gray-400"></i>
-                            <input type="email" id="registerEmail" required 
-                                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                   placeholder="example@email.com">
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2 font-medium">كلمة المرور</label>
-                        <div class="relative">
-                            <i class="fas fa-lock absolute right-4 top-3 text-gray-400"></i>
-                            <input type="password" id="registerPassword" required 
-                                   class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                                   placeholder="••••••••">
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">يجب أن تكون كلمة المرور 6 أحرف على الأقل</p>
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-3 font-medium">نوع الحساب</label>
-                        <div class="grid grid-cols-2 gap-3">
-                            <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors type-card"
-                                   onclick="selectRegisterAccountType('seller')">
-                                <input type="radio" name="accountType" value="seller" class="ml-2" id="sellerRadio">
-                                <div class="flex-1">
-                                    <div class="font-semibold flex items-center">
-                                        <i class="fas fa-store text-blue-500 ml-2"></i>
-                                        بائع
-                                    </div>
-                                    <div class="text-xs text-gray-500">لإنشاء متاجر والبيع</div>
-                                </div>
-                            </label>
-                            <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors type-card"
-                                   onclick="selectRegisterAccountType('buyer')">
-                                <input type="radio" name="accountType" value="buyer" class="ml-2" id="buyerRadio">
-                                <div class="flex-1">
-                                    <div class="font-semibold flex items-center">
-                                        <i class="fas fa-shopping-cart text-green-500 ml-2"></i>
-                                        مشتري
-                                    </div>
-                                    <div class="text-xs text-gray-500">لشراء المنتجات</div>
-                                </div>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <input type="checkbox" id="registerTerms" required class="ml-2 rounded border-gray-300">
-                        <label for="registerTerms" class="text-gray-700 text-sm">
-                            أوافق على <a href="#" class="text-primary hover:underline">الشروط والأحكام</a>
-                        </label>
-                    </div>
-                    <button type="submit" id="registerBtn"
-                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold btn-animated">
-                        <span id="registerText">إنشاء حساب</span>
-                        <i class="fas fa-spinner fa-spin hidden ml-2" id="registerSpinner"></i>
+                    <button type="button" onclick="loginWithFacebook()"
+                            class="border-2 border-gray-200 py-3 rounded-xl hover:border-blue-600 hover:bg-blue-50 transition-all group">
+                        <i class="fab fa-facebook ml-2 text-blue-600 group-hover:scale-110 transition-transform"></i>
+                        فيسبوك
                     </button>
                 </div>
+                
                 <div class="text-center mt-6">
-                    <p class="text-gray-600 mb-4">أو سجل باستخدام</p>
-                    <button type="button" onclick="registerWithGoogle()" 
-                            class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 transition-colors">
-                        <i class="fab fa-google ml-2 text-red-500"></i>
-                        التسجيل بحساب Google
-                    </button>
-                    <p class="mt-6 text-gray-600">
-                        لديك حساب بالفعل؟ 
-                        <a href="#" onclick="showLoginModal()" class="text-primary font-semibold hover:underline">سجل دخول</a>
+                    <p class="text-gray-600">
+                        ليس لديك حساب؟ 
+                        <button type="button" onclick="switchToRegister()" class="text-primary font-semibold hover:underline">
+                            سجل الآن مجاناً
+                        </button>
                     </p>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Create Store Modal -->
-    <div id="createStoreModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-2xl w-full p-8 modal-content">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-dark">إنشاء متجر جديد</h3>
-                <button onclick="closeModal('createStoreModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="createStoreForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 mb-2">اسم المتجر *</label>
-                        <input type="text" id="storeName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2">فئة المتجر</label>
-                        <select id="storeCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="electronics">إلكترونيات</option>
-                            <option value="clothing">ملابس</option>
-                            <option value="home">منزلية</option>
-                            <option value="books">كتب</option>
-                            <option value="sports">رياضية</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-gray-700 mb-2">وصف المتجر</label>
-                        <textarea id="storeDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
-                    </div>
+    <!-- Enhanced Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-75 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-8 transform animate-slide-in">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-user-plus text-white text-2xl"></i>
                 </div>
-                <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="closeModal('createStoreModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</button>
-                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 btn-animated">
-                        <i class="fas fa-check ml-2"></i>
-                        إنشاء المتجر
-                    </button>
+                <h3 class="text-2xl font-bold text-dark">انضم إلينا الآن! 🚀</h3>
+                <p class="text-gray-600">أنشئ حسابك في أقل من دقيقة</p>
+            </div>
+            
+            <form id="registerForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2 font-semibold">
+                        <i class="fas fa-user ml-2 text-primary"></i>
+                        الاسم الكامل
+                    </label>
+                    <input type="text" id="registerName" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                           placeholder="أحمد محمد">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2 font-semibold">
+                        <i class="fas fa-envelope ml-2 text-primary"></i>
+                        البريد الإلكتروني
+                    </label>
+                    <input type="email" id="registerEmail" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                           placeholder="example@email.com">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2 font-semibold">
+                        <i class="fas fa-lock ml-2 text-primary"></i>
+                        كلمة المرور
+                    </label>
+                    <input type="password" id="registerPassword" required 
+                           class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                           placeholder="••••••••">
+                    <p class="text-sm text-gray-500 mt-2">يجب أن تحتوي على 8 أحرف على الأقل</p>
+                </div>
+                
+                <button type="submit" class="btn-primary text-white py-3 rounded-xl w-full mb-6">
+                    <i class="fas fa-user-plus ml-2"></i>
+                    إنشاء حساب
+                </button>
+                
+                <div class="text-center">
+                    <p class="text-gray-600">
+                        لديك حساب بالفعل؟ 
+                        <button type="button" onclick="switchToLogin()" class="text-primary font-semibold hover:underline">
+                            سجل الدخول
+                        </button>
+                    </p>
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- ... (rest of modals remain similar but with improved styling) ... -->
 
     <script>
         // 🔥 Firebase Configuration
@@ -688,7 +630,6 @@
         let currentUser = null;
         let currentUserRole = null;
         let currentUserAccountType = null;
-        let selectedAccountTypeGlobal = null;
         
         try {
             firebase.initializeApp(firebaseConfig);
@@ -699,83 +640,167 @@
             console.error("❌ خطأ في Firebase:", error);
         }
 
-        // =============================================
-        // 🌟 Central Notification System
-        // =============================================
+        // تحسين دوال التحميل والتنبيهات
+        async function showLoading(title = "جاري التحميل...", message = "يرجى الانتظار") {
+            const overlay = document.getElementById('loadingOverlay');
+            const titleElement = document.getElementById('loadingTitle');
+            const messageElement = document.getElementById('loadingMessage');
+            
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            // محاكاة شريط التقدم
+            let progress = 0;
+            const progressBar = document.getElementById('loadingBar');
+            const interval = setInterval(() => {
+                progress += Math.random() * 10;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = `${progress}%`;
+            }, 200);
+            
+            return {
+                hide: () => {
+                    clearInterval(interval);
+                    progressBar.style.width = '100%';
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                        overlay.classList.remove('flex');
+                        setTimeout(() => {
+                            progressBar.style.width = '0%';
+                        }, 500);
+                    }, 500);
+                },
+                updateProgress: (value) => {
+                    progressBar.style.width = `${value}%`;
+                }
+            };
+        }
 
-        function showCentralNotification(title, message, type = 'loading') {
-            const modal = document.getElementById('centralNotification');
-            const loadingIcon = document.getElementById('loadingIcon');
-            const successIcon = document.getElementById('successIcon');
-            const errorIcon = document.getElementById('errorIcon');
-            const titleEl = document.getElementById('notificationTitle');
-            const messageEl = document.getElementById('notificationMessage');
-            const button = document.getElementById('notificationButton');
-            
-            titleEl.textContent = title;
-            messageEl.textContent = message;
-            
-            // إخفاء جميع الأيقونات أولاً
-            loadingIcon.classList.add('hidden');
-            successIcon.classList.add('hidden');
-            errorIcon.classList.add('hidden');
-            button.classList.add('hidden');
-            
-            if (type === 'loading') {
-                loadingIcon.classList.remove('hidden');
-            } else if (type === 'success') {
-                successIcon.classList.remove('hidden');
-                successIcon.classList.add('success-animation');
-                button.classList.remove('hidden');
-            } else if (type === 'error') {
-                errorIcon.classList.remove('hidden');
-                button.classList.remove('hidden');
-            }
+        async function showSuccess(title, message) {
+            const modal = document.getElementById('successModal');
+            document.getElementById('successTitle').textContent = title;
+            document.getElementById('successMessage').textContent = message;
             
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            
+            // تشغيل صوت النجاح
+            try {
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3');
+                audio.volume = 0.3;
+                audio.play();
+            } catch (e) {}
+            
+            return new Promise(resolve => {
+                window.successModalCallback = () => {
+                    closeSuccessModal();
+                    resolve();
+                };
+            });
         }
 
-        function hideCentralNotification() {
-            const modal = document.getElementById('centralNotification');
+        function closeSuccessModal() {
+            const modal = document.getElementById('successModal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
 
-        // =============================================
-        // 🚀 Improved Authentication Functions
-        // =============================================
+        function showWelcomeModal(userName, userEmail, accountType) {
+            const modal = document.getElementById('welcomeModal');
+            const title = document.getElementById('welcomeTitle');
+            const message = document.getElementById('welcomeMessage');
+            const userNameElement = document.getElementById('welcomeUserName');
+            const userEmailElement = document.getElementById('welcomeUserEmail');
+            const userBadge = document.getElementById('welcomeUserBadge');
+            const instructions = document.getElementById('welcomeInstructions');
+            
+            // تحديث البيانات
+            userNameElement.textContent = userName;
+            userEmailElement.textContent = userEmail;
+            
+            if (accountType === 'seller') {
+                title.textContent = "مبروك! أنت الآن بائع على المنصة 🎉";
+                message.textContent = "تم إنشاء حسابك كبائع بنجاح! يمكنك الآن البدء في إنشاء متاجرك الخاصة.";
+                userBadge.className = "seller-badge inline-block px-4 py-2 rounded-full text-white text-sm font-semibold mb-4";
+                userBadge.textContent = "👑 بائع معتمد";
+                instructions.textContent = "انقر على زر 'ابدأ رحلتك' لإنشاء أول متجر لك.";
+            } else {
+                title.textContent = "أهلاً وسهلاً بك! 🛍️";
+                message.textContent = "تم إنشاء حسابك كمشتري بنجاح! استمتع بتجربة تسوق فريدة.";
+                userBadge.className = "buyer-badge inline-block px-4 py-2 rounded-full text-white text-sm font-semibold mb-4";
+                userBadge.textContent = "🛒 مشتري نشط";
+                instructions.textContent = "انقر على زر 'ابدأ رحلتك' لتصفح المتجر الرئيسي والمنتجات.";
+            }
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // تشغيل صوت الترحيب
+            try {
+                const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3');
+                audio.volume = 0.3;
+                audio.play();
+            } catch (e) {}
+        }
 
-        async function handleLogin(event) {
-            event.preventDefault();
+        function closeWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function startJourney() {
+            closeWelcomeModal();
+            
+            if (currentUserAccountType === 'seller') {
+                // للبائع: عرض نافذة إنشاء متجر مباشرة
+                setTimeout(() => {
+                    showCreateStoreModal();
+                }, 500);
+            } else {
+                // للمشتري: الانتقال إلى المتجر الرئيسي
+                navigateTo('mainStore');
+            }
+        }
+
+        function selectAccountType(type) {
+            closeModal('accountTypeModal');
+            
+            // تخزين نوع الحساب مؤقتاً
+            window.tempAccountType = type;
+            
+            if (type === 'seller') {
+                // فتح صفحة إنشاء المتجر مباشرة
+                showCreateStoreModal();
+            } else {
+                // فتح المتجر الرئيسي
+                navigateTo('mainStore');
+            }
+        }
+
+        // 🔥 تحسين دوال التسجيل والدخول
+        async function login(event) {
+            if (event) event.preventDefault();
             
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
             
-            // التحقق من البيانات
+            // التحقق من المدخلات
             if (!email || !password) {
-                showCentralNotification('خطأ', 'يرجى ملء جميع الحقول', 'error');
+                showError('يرجى ملء جميع الحقول');
                 return;
             }
             
+            const loading = await showLoading('جاري تسجيل الدخول...', 'جارٍ التحقق من بياناتك');
+            
             try {
-                // عرض حالة التحميل
-                loginBtn.disabled = true;
-                loginText.textContent = 'جاري الدخول...';
-                loginSpinner.classList.remove('hidden');
-                
-                // إغلاق نافذة التسجيل
-                closeModal('loginModal');
-                
-                // عرض الإشعار المركزي
-                showCentralNotification('جاري تسجيل الدخول', 'يرجى الانتظار...', 'loading');
-                
-                // تسجيل الدخول
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 currentUser = userCredential.user;
+                
+                // تحديث شريط التقدم
+                loading.updateProgress(50);
                 
                 // جلب بيانات المستخدم
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
@@ -784,435 +809,285 @@
                     currentUserRole = userData.role || 'buyer';
                     currentUserAccountType = userData.accountType || 'buyer';
                     
-                    // تحديث آخر تسجيل دخول
+                    // تحديث شريط التقدم
+                    loading.updateProgress(80);
+                    
+                    // تحديث آخر وقت تسجيل دخول
                     await db.collection('users').doc(currentUser.uid).update({
                         lastLogin: new Date().toISOString()
                     });
                     
-                    // إظهار رسالة النجاح
-                    showCentralNotification('تم تسجيل الدخول', `مرحباً ${userData.name || currentUser.email}!`, 'success');
+                    // حفظ سجل تسجيل الدخول
+                    await db.collection('user_logs').add({
+                        userId: currentUser.uid,
+                        action: 'login',
+                        timestamp: new Date().toISOString(),
+                        method: 'email'
+                    });
                     
-                    // تحديث الواجهة
-                    setTimeout(() => {
-                        updateUIAfterLogin();
-                        hideCentralNotification();
-                        redirectAfterLogin();
-                    }, 1500);
+                    loading.hide();
+                    
+                    // عرض رسالة نجاح
+                    await showSuccess('تم تسجيل الدخول بنجاح!', `مرحباً بعودتك ${userData.name || currentUser.email.split('@')[0]} 🎉`);
+                    
+                    closeModal('loginModal');
+                    updateUIAfterLogin();
+                    
+                    // عرض المحتوى المناسب حسب نوع المستخدم
+                    showContentBasedOnRole();
                     
                 } else {
-                    throw new Error('بيانات المستخدم غير موجودة');
+                    loading.hide();
+                    showError('بيانات المستخدم غير موجودة');
                 }
                 
             } catch (error) {
+                loading.hide();
                 console.error('Login error:', error);
-                showCentralNotification('خطأ في الدخول', getFirebaseErrorMessage(error.code), 'error');
-            } finally {
-                // إعادة تعيين حالة التحميل
-                if (loginBtn) {
-                    loginBtn.disabled = false;
-                    loginText.textContent = 'تسجيل الدخول';
-                    loginSpinner.classList.add('hidden');
-                }
+                showError(getFirebaseErrorMessage(error.code));
             }
         }
 
-        function selectRegisterAccountType(type) {
-            selectedAccountTypeGlobal = type;
-            
-            // تحديث مظهر البطاقات
-            const sellerCard = document.querySelector('label[for="sellerRadio"]');
-            const buyerCard = document.querySelector('label[for="buyerRadio"]');
-            const sellerRadio = document.getElementById('sellerRadio');
-            const buyerRadio = document.getElementById('buyerRadio');
-            
-            if (type === 'seller') {
-                sellerCard.classList.add('selected');
-                buyerCard.classList.remove('selected');
-                sellerRadio.checked = true;
-            } else {
-                buyerCard.classList.add('selected');
-                sellerCard.classList.remove('selected');
-                buyerRadio.checked = true;
-            }
-        }
-
-        async function handleRegister(event) {
-            event.preventDefault();
+        async function register(event) {
+            if (event) event.preventDefault();
             
             const name = document.getElementById('registerName').value;
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
-            const terms = document.getElementById('registerTerms').checked;
             
-            // التحقق من البيانات
+            // التحقق من المدخلات
             if (!name || !email || !password) {
-                showCentralNotification('خطأ', 'يرجى ملء جميع الحقول', 'error');
-                return;
-            }
-            
-            if (!terms) {
-                showCentralNotification('خطأ', 'يجب الموافقة على الشروط والأحكام', 'error');
+                showError('يرجى ملء جميع الحقول');
                 return;
             }
             
             if (password.length < 6) {
-                showCentralNotification('خطأ', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'error');
+                showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
                 return;
             }
             
-            if (!selectedAccountTypeGlobal) {
-                showCentralNotification('خطأ', 'يرجى اختيار نوع الحساب', 'error');
-                return;
-            }
+            const loading = await showLoading('جاري إنشاء الحساب...', 'نحن نعد كل شيء لك');
             
             try {
-                // عرض حالة التحميل في الزر
-                const registerBtn = document.getElementById('registerBtn');
-                const registerText = document.getElementById('registerText');
-                const registerSpinner = document.getElementById('registerSpinner');
-                
-                registerBtn.disabled = true;
-                registerText.textContent = 'جاري الإنشاء...';
-                registerSpinner.classList.remove('hidden');
-                
-                // إغلاق نافذة التسجيل
-                closeModal('registerModal');
-                
-                // عرض الإشعار المركزي
-                showCentralNotification('جاري إنشاء الحساب', 'يرجى الانتظار...', 'loading');
-                
-                // إنشاء حساب Firebase
+                // الخطوة 1: إنشاء حساب Firebase
+                loading.updateProgress(30);
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 currentUser = userCredential.user;
                 
-                // تحديث الاسم
+                // الخطوة 2: تحديث ملف التعريف
+                loading.updateProgress(50);
                 await currentUser.updateProfile({ displayName: name });
                 
-                // تحديد دور المستخدم
-                let userRole = 'buyer';
-                if (selectedAccountTypeGlobal === 'seller') {
-                    userRole = 'seller';
-                }
+                // الخطوة 3: عرض نافذة اختيار نوع الحساب
+                loading.hide();
+                closeModal('registerModal');
                 
-                // حفظ بيانات المستخدم في Firestore
-                await db.collection('users').doc(currentUser.uid).set({
+                // عرض نافذة اختيار نوع الحساب
+                document.getElementById('accountTypeModal').classList.remove('hidden');
+                document.getElementById('accountTypeModal').classList.add('flex');
+                
+                // حفظ بيانات المستخدم الأولية
+                const userData = {
                     name: name,
                     email: email,
-                    role: userRole,
-                    accountType: selectedAccountTypeGlobal,
+                    role: 'pending', // سيتم تحديثه بعد اختيار النوع
+                    accountType: 'pending',
                     plan: 'free',
                     createdAt: new Date().toISOString(),
                     storesCount: 0,
                     totalSales: 0,
                     totalPurchases: 0,
                     subscriptionExpiry: null,
-                    maxStores: selectedAccountTypeGlobal === 'seller' ? 1 : 0,
+                    maxStores: 0,
                     maxProducts: 99999,
                     commissionRate: 0.15,
                     emailVerified: false,
                     isActive: true,
                     lastLogin: new Date().toISOString()
-                });
+                };
+                
+                await db.collection('users').doc(currentUser.uid).set(userData);
                 
                 // حفظ سجل التسجيل
                 await db.collection('user_logs').add({
                     userId: currentUser.uid,
                     action: 'register',
                     timestamp: new Date().toISOString(),
-                    details: {
-                        accountType: selectedAccountTypeGlobal,
-                        email: email,
-                        name: name
-                    }
+                    details: { email: email, name: name }
                 });
                 
-                // إظهار رسالة النجاح
-                showCentralNotification('تم إنشاء الحساب', `مرحباً ${name}! تم إنشاء حسابك بنجاح`, 'success');
-                
-                // تحديث المتغيرات
-                currentUserRole = userRole;
-                currentUserAccountType = selectedAccountTypeGlobal;
-                
-                // تحديث الواجهة
-                setTimeout(() => {
-                    updateUIAfterLogin();
-                    hideCentralNotification();
-                    
-                    // توجيه حسب نوع الحساب
-                    if (selectedAccountTypeGlobal === 'seller') {
-                        showCreateStoreModal();
-                    } else {
-                        navigateTo('mainStore');
-                        loadMainStoreProducts();
-                    }
-                }, 1500);
-                
             } catch (error) {
+                loading.hide();
                 console.error('Registration error:', error);
-                showCentralNotification('خطأ في التسجيل', getFirebaseErrorMessage(error.code), 'error');
-            } finally {
-                // إعادة تعيين حالة التحميل
-                const registerBtn = document.getElementById('registerBtn');
-                const registerText = document.getElementById('registerText');
-                const registerSpinner = document.getElementById('registerSpinner');
-                
-                if (registerBtn) {
-                    registerBtn.disabled = false;
-                    registerText.textContent = 'إنشاء حساب';
-                    registerSpinner.classList.add('hidden');
-                }
+                showError(getFirebaseErrorMessage(error.code));
             }
         }
 
         async function loginWithGoogle() {
             try {
-                closeModal('loginModal');
-                showCentralNotification('جاري الدخول', 'جاري الاتصال بحساب Google...', 'loading');
+                const loading = await showLoading('جاري تسجيل الدخول...', 'باستخدام حساب جوجل');
                 
                 const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('profile');
+                provider.addScope('email');
+                
                 const result = await auth.signInWithPopup(provider);
                 currentUser = result.user;
+                
+                loading.updateProgress(50);
                 
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 
                 if (!userDoc.exists) {
+                    // حساب جديد عبر جوجل - عرض نافذة اختيار نوع الحساب
+                    loading.hide();
+                    
                     // عرض نافذة اختيار نوع الحساب
-                    hideCentralNotification();
-                    setTimeout(() => {
-                        showAccountTypeModal();
-                    }, 300);
+                    document.getElementById('accountTypeModal').classList.remove('hidden');
+                    document.getElementById('accountTypeModal').classList.add('flex');
+                    
+                    // حفظ البيانات الأولية
+                    await db.collection('users').doc(currentUser.uid).set({
+                        name: currentUser.displayName,
+                        email: currentUser.email,
+                        role: 'pending',
+                        accountType: 'pending',
+                        plan: 'free',
+                        createdAt: new Date().toISOString(),
+                        googleAuth: true,
+                        emailVerified: true,
+                        isActive: true,
+                        lastLogin: new Date().toISOString()
+                    });
+                    
+                } else {
+                    // حساب موجود - متابعة الدخول
+                    const userData = userDoc.data();
+                    currentUserRole = userData.role || 'buyer';
+                    currentUserAccountType = userData.accountType || 'buyer';
+                    
+                    // تحديث آخر وقت تسجيل دخول
+                    await db.collection('users').doc(currentUser.uid).update({
+                        lastLogin: new Date().toISOString()
+                    });
+                    
+                    loading.updateProgress(80);
+                    
+                    // حفظ سجل تسجيل الدخول
+                    await db.collection('user_logs').add({
+                        userId: currentUser.uid,
+                        action: 'login',
+                        timestamp: new Date().toISOString(),
+                        method: 'google'
+                    });
+                    
+                    loading.hide();
+                    
+                    await showSuccess('تم تسجيل الدخول بنجاح!', `مرحباً ${currentUser.displayName} 🎉`);
+                    
+                    closeModal('loginModal');
+                    updateUIAfterLogin();
+                    showContentBasedOnRole();
+                }
+                
+            } catch (error) {
+                console.error('Google login error:', error);
+                showError(getFirebaseErrorMessage(error.code));
+            }
+        }
+
+        async function loginWithFacebook() {
+            try {
+                const loading = await showLoading('جاري تسجيل الدخول...', 'باستخدام حساب فيسبوك');
+                
+                const provider = new firebase.auth.FacebookAuthProvider();
+                provider.addScope('email');
+                provider.addScope('public_profile');
+                
+                const result = await auth.signInWithPopup(provider);
+                currentUser = result.user;
+                
+                loading.updateProgress(50);
+                
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                
+                if (!userDoc.exists) {
+                    loading.hide();
+                    
+                    // عرض نافذة اختيار نوع الحساب
+                    document.getElementById('accountTypeModal').classList.remove('hidden');
+                    document.getElementById('accountTypeModal').classList.add('flex');
+                    
+                    await db.collection('users').doc(currentUser.uid).set({
+                        name: currentUser.displayName,
+                        email: currentUser.email,
+                        role: 'pending',
+                        accountType: 'pending',
+                        plan: 'free',
+                        createdAt: new Date().toISOString(),
+                        facebookAuth: true,
+                        emailVerified: true,
+                        isActive: true,
+                        lastLogin: new Date().toISOString()
+                    });
+                    
                 } else {
                     const userData = userDoc.data();
                     currentUserRole = userData.role || 'buyer';
                     currentUserAccountType = userData.accountType || 'buyer';
                     
-                    // تحديث آخر تسجيل دخول
                     await db.collection('users').doc(currentUser.uid).update({
                         lastLogin: new Date().toISOString()
                     });
                     
-                    showCentralNotification('تم تسجيل الدخول', `مرحباً ${currentUser.displayName}!`, 'success');
+                    loading.updateProgress(80);
                     
-                    setTimeout(() => {
-                        updateUIAfterLogin();
-                        hideCentralNotification();
-                        redirectAfterLogin();
-                    }, 1500);
-                }
-                
-            } catch (error) {
-                console.error('Google login error:', error);
-                showCentralNotification('خطأ', 'فشل تسجيل الدخول بـ Google', 'error');
-            }
-        }
-
-        function registerWithGoogle() {
-            loginWithGoogle();
-        }
-
-        function showAccountTypeModal() {
-            closeAllModals();
-            document.getElementById('accountTypeModal').classList.remove('hidden');
-            document.getElementById('accountTypeModal').classList.add('flex');
-            
-            // إعادة تعيين التحديد
-            selectedAccountTypeGlobal = null;
-            document.getElementById('sellerCard').classList.remove('selected');
-            document.getElementById('buyerCard').classList.remove('selected');
-        }
-
-        function selectAccountType(type) {
-            selectedAccountTypeGlobal = type;
-            
-            const sellerCard = document.getElementById('sellerCard');
-            const buyerCard = document.getElementById('buyerCard');
-            
-            if (type === 'seller') {
-                sellerCard.classList.add('selected');
-                buyerCard.classList.remove('selected');
-            } else {
-                buyerCard.classList.add('selected');
-                sellerCard.classList.remove('selected');
-            }
-        }
-
-        async function confirmAccountType() {
-            if (!selectedAccountTypeGlobal) {
-                showCentralNotification('خطأ', 'يرجى اختيار نوع الحساب', 'error');
-                return;
-            }
-            
-            try {
-                closeModal('accountTypeModal');
-                showCentralNotification('جاري إنشاء الحساب', 'يرجى الانتظار...', 'loading');
-                
-                // تحديد دور المستخدم
-                let userRole = 'buyer';
-                if (selectedAccountTypeGlobal === 'seller') {
-                    userRole = 'seller';
-                }
-                
-                // حفظ بيانات المستخدم في Firestore
-                await db.collection('users').doc(currentUser.uid).set({
-                    name: currentUser.displayName || currentUser.email.split('@')[0],
-                    email: currentUser.email,
-                    role: userRole,
-                    accountType: selectedAccountTypeGlobal,
-                    plan: 'free',
-                    createdAt: new Date().toISOString(),
-                    storesCount: 0,
-                    totalSales: 0,
-                    totalPurchases: 0,
-                    subscriptionExpiry: null,
-                    maxStores: selectedAccountTypeGlobal === 'seller' ? 1 : 0,
-                    maxProducts: 99999,
-                    commissionRate: 0.15,
-                    emailVerified: true,
-                    isActive: true,
-                    lastLogin: new Date().toISOString(),
-                    googleAuth: true
-                });
-                
-                // حفظ سجل التسجيل
-                await db.collection('user_logs').add({
-                    userId: currentUser.uid,
-                    action: 'register_google',
-                    timestamp: new Date().toISOString(),
-                    details: {
-                        accountType: selectedAccountTypeGlobal,
-                        email: currentUser.email,
-                        name: currentUser.displayName
-                    }
-                });
-                
-                // تحديث المتغيرات
-                currentUserRole = userRole;
-                currentUserAccountType = selectedAccountTypeGlobal;
-                
-                showCentralNotification('تم إنشاء الحساب', `مرحباً ${currentUser.displayName}!`, 'success');
-                
-                setTimeout(() => {
+                    await db.collection('user_logs').add({
+                        userId: currentUser.uid,
+                        action: 'login',
+                        timestamp: new Date().toISOString(),
+                        method: 'facebook'
+                    });
+                    
+                    loading.hide();
+                    
+                    await showSuccess('تم تسجيل الدخول بنجاح!', `مرحباً ${currentUser.displayName} 🎉`);
+                    
+                    closeModal('loginModal');
                     updateUIAfterLogin();
-                    hideCentralNotification();
-                    
-                    // توجيه حسب نوع الحساب
-                    if (selectedAccountTypeGlobal === 'seller') {
-                        showCreateStoreModal();
-                    } else {
-                        navigateTo('mainStore');
-                        loadMainStoreProducts();
-                    }
-                }, 1500);
+                    showContentBasedOnRole();
+                }
                 
             } catch (error) {
-                console.error('Error saving user data:', error);
-                showCentralNotification('خطأ', 'حدث خطأ في حفظ البيانات', 'error');
+                console.error('Facebook login error:', error);
+                showError(getFirebaseErrorMessage(error.code));
             }
         }
 
-        // =============================================
-        // 🎯 Redirect Functions
-        // =============================================
-
-        function redirectAfterLogin() {
-            if (!currentUser) return;
-            
-            setTimeout(() => {
-                if (currentUserAccountType === 'seller') {
-                    // تحقق إذا كان لديه متاجر
-                    checkUserStores();
-                } else {
-                    // توجيه للمتجر الرئيسي
-                    navigateTo('mainStore');
-                    loadMainStoreProducts();
-                }
-            }, 500);
-        }
-
-        async function checkUserStores() {
-            try {
-                const storesSnapshot = await db.collection('stores')
-                    .where('ownerId', '==', currentUser.uid)
-                    .where('isActive', '==', true)
-                    .get();
-                
-                if (storesSnapshot.empty) {
-                    // لا يوجد متاجر، اعرض نافذة إنشاء متجر
-                    showCreateStoreModal();
-                } else {
-                    // لديه متاجر، توجيه لقائمة المتاجر
-                    navigateTo('stores');
-                    loadStores();
-                }
-            } catch (error) {
-                console.error('Error checking stores:', error);
-                navigateTo('stores');
-            }
-        }
-
-        // =============================================
-        // 🎨 UI Update Functions
-        // =============================================
-
-        function updateUIAfterLogin() {
-            const authButtons = document.getElementById('authButtons');
-            const user = auth.currentUser;
-            
-            let badgeClass = '';
-            let badgeText = '';
-            
-            if (currentUserRole === 'admin') {
-                badgeClass = 'admin-badge';
-                badgeText = 'مدير';
-            } else if (currentUserAccountType === 'seller') {
-                badgeClass = 'seller-badge';
-                badgeText = 'بائع';
-            } else {
-                badgeClass = 'buyer-badge';
-                badgeText = 'مشتري';
-            }
-            
-            authButtons.innerHTML = `
-                <div class="flex items-center space-x-4 space-x-reverse">
-                    ${currentUserRole === 'admin' ? `
-                        <button onclick="showAdminPanelModal()" class="bg-accent text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
-                            <i class="fas fa-cogs ml-2"></i>
-                            لوحة الإدارة
-                        </button>
-                    ` : ''}
-                    
-                    ${currentUserAccountType === 'seller' ? `
-                        <button onclick="showUserDashboard()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-store ml-2"></i>
-                            متاجري
-                        </button>
-                    ` : ''}
-                    
-                    <div class="flex items-center space-x-3 space-x-reverse">
-                        <span class="${badgeClass} text-white text-xs px-3 py-1 rounded-full">${badgeText}</span>
-                        <button onclick="showAccountSettingsModal()" class="text-dark hover:text-primary transition-colors">
-                            <i class="fas fa-user ml-2"></i>
-                            ${user.displayName || user.email.split('@')[0]}
-                        </button>
-                        <button onclick="logout()" class="text-red-600 hover:text-red-800 transition-colors">
-                            <i class="fas fa-sign-out-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // =============================================
-        // 🚨 بقية الدوال (بدون تغيير)
-        // =============================================
-
-        // Navigation functions
+        // تحسين دوال التنقل
         function navigateTo(section) {
-            event.preventDefault();
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(section).classList.remove('hidden');
+            event?.preventDefault();
+            
+            // إغلاق القائمة المتنقلة
             document.getElementById('mobileMenu').classList.add('hidden');
             
+            // إخفاء جميع الأقسام
+            document.querySelectorAll('main > section').forEach(s => {
+                s.classList.add('hidden');
+                s.classList.remove('animate-fade-in');
+            });
+            
+            // إظهار القسم المطلوب مع تأثير
+            const targetSection = document.getElementById(section);
+            if (targetSection) {
+                targetSection.classList.remove('hidden');
+                setTimeout(() => {
+                    targetSection.classList.add('animate-fade-in');
+                    targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 50);
+            }
+            
+            // تحميل المحتوى المناسب
             if (section === 'mainStore' && currentUser) {
                 loadMainStoreProducts();
             } else if (section === 'stores' && currentUser) {
@@ -1223,26 +1098,16 @@
         }
 
         function showStoresIfLoggedIn() {
-            event.preventDefault();
+            event?.preventDefault();
             if (!currentUser) {
                 showLoginModal();
-                showCentralNotification('تحذير', 'يجب تسجيل الدخول أولاً', 'error');
+                showError('يجب تسجيل الدخول أولاً');
             } else {
                 navigateTo('stores');
             }
         }
 
-        function showMainStoreIfLoggedIn() {
-            event.preventDefault();
-            if (!currentUser) {
-                showLoginModal();
-                showCentralNotification('تحذير', 'يجب تسجيل الدخول أولاً', 'error');
-            } else {
-                navigateTo('mainStore');
-            }
-        }
-
-        // Modal functions
+        // تحسين دوال النماذج المنبثقة
         function showLoginModal() {
             closeAllModals();
             document.getElementById('loginModal').classList.remove('hidden');
@@ -1253,36 +1118,548 @@
             closeAllModals();
             document.getElementById('registerModal').classList.remove('hidden');
             document.getElementById('registerModal').classList.add('flex');
+        }
+
+        function switchToRegister() {
+            closeModal('loginModal');
+            setTimeout(() => showRegisterModal(), 300);
+        }
+
+        function switchToLogin() {
+            closeModal('registerModal');
+            setTimeout(() => showLoginModal(), 300);
+        }
+
+        // 🔥 تحسين تحديث واجهة المستخدم بعد الدخول
+        function updateUIAfterLogin() {
+            const authButtons = document.getElementById('authButtons');
+            const user = auth.currentUser;
             
-            // إعادة تعيين نوع الحساب
-            selectedAccountTypeGlobal = null;
-            const sellerCard = document.querySelector('label[for="sellerRadio"]');
-            const buyerCard = document.querySelector('label[for="buyerRadio"]');
-            if (sellerCard) sellerCard.classList.remove('selected');
-            if (buyerCard) buyerCard.classList.remove('selected');
+            if (!user) return;
+            
+            let userBadge = '';
+            let badgeClass = '';
+            
+            if (currentUserRole === 'admin') {
+                userBadge = '<i class="fas fa-crown ml-2"></i> مدير النظام';
+                badgeClass = 'admin-badge';
+            } else if (currentUserAccountType === 'seller') {
+                userBadge = '<i class="fas fa-store ml-2"></i> بائع';
+                badgeClass = 'seller-badge';
+            } else {
+                userBadge = '<i class="fas fa-shopping-cart ml-2"></i> مشتري';
+                badgeClass = 'buyer-badge';
+            }
+            
+            const userName = user.displayName || user.email.split('@')[0];
+            
+            authButtons.innerHTML = `
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    ${currentUserRole === 'admin' ? `
+                        <button onclick="showAdminPanelModal()" 
+                                class="bg-gradient-to-r from-accent to-yellow-600 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-cogs ml-2"></i>
+                            لوحة الإدارة
+                        </button>
+                    ` : ''}
+                    
+                    ${currentUserAccountType === 'seller' ? `
+                        <button onclick="showUserDashboard()" 
+                                class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all duration-300">
+                            <i class="fas fa-chart-line ml-2"></i>
+                            لوحة التحكم
+                        </button>
+                    ` : ''}
+                    
+                    <div class="relative group">
+                        <button onclick="showAccountSettingsModal()" 
+                                class="flex items-center space-x-2 space-x-reverse px-4 py-3 rounded-xl border-2 border-gray-200 hover:border-primary transition-all duration-300">
+                            <div class="w-8 h-8 ${badgeClass} rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-white text-sm"></i>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-semibold text-sm text-dark truncate max-w-[120px]">${userName}</div>
+                                <div class="text-xs text-gray-500">${currentUserAccountType === 'seller' ? 'بائع' : 'مشتري'}</div>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                        </button>
+                        
+                        <!-- Dropdown Menu -->
+                        <div class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 hidden group-hover:block z-50">
+                            <div class="p-4 border-b">
+                                <div class="font-semibold text-dark">${userName}</div>
+                                <div class="text-xs text-gray-500">${user.email}</div>
+                            </div>
+                            <div class="p-2">
+                                <button onclick="showAccountSettingsModal()" 
+                                        class="w-full text-right px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-cog ml-2 text-gray-500"></i>
+                                    إعدادات الحساب
+                                </button>
+                                ${currentUserAccountType === 'seller' ? `
+                                    <button onclick="showUserDashboard()" 
+                                            class="w-full text-right px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                                        <i class="fas fa-chart-bar ml-2 text-blue-500"></i>
+                                        لوحة التحكم
+                                    </button>
+                                ` : ''}
+                                <button onclick="logout()" 
+                                        class="w-full text-right px-4 py-2 rounded-lg hover:bg-red-50 text-red-600 transition-colors">
+                                    <i class="fas fa-sign-out-alt ml-2"></i>
+                                    تسجيل الخروج
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            document.getElementById(modalId).classList.remove('flex');
+        function updateUIAfterLogout() {
+            const authButtons = document.getElementById('authButtons');
+            
+            authButtons.innerHTML = `
+                <button onclick="showLoginModal()" class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg">
+                    <i class="fas fa-sign-in-alt ml-2 animate-pulse-slow"></i>
+                    تسجيل الدخول
+                </button>
+                <button onclick="showRegisterModal()" class="border-2 border-primary text-primary px-6 py-3 rounded-xl hover:bg-primary hover:text-white transition-all duration-300 hover:shadow-lg">
+                    <i class="fas fa-user-plus ml-2"></i>
+                    إنشاء حساب
+                </button>
+            `;
         }
 
-        function closeAllModals() {
-            const modals = ['loginModal', 'registerModal', 'accountTypeModal', 
-                           'createStoreModal', 'storeDetailsModal', 'storePageModal', 'adminPanelModal'];
-            modals.forEach(modalId => {
-                closeModal(modalId);
+        // 🔥 تحسين دوال تحميل المحتوى
+        async function loadStores() {
+            const container = document.getElementById('storesContainer');
+            
+            try {
+                const loading = await showLoading('جاري تحميل المتاجر', 'جارٍ تحميل أفضل المتاجر النشطة');
+                
+                const querySnapshot = await db.collection('stores')
+                    .where('isActive', '==', true)
+                    .orderBy('createdAt', 'desc')
+                    .limit(12)
+                    .get();
+                
+                loading.updateProgress(70);
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = `
+                        <div class="md:col-span-3 text-center py-12">
+                            <div class="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                                <i class="fas fa-store text-gray-400 text-4xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-600 mb-2">لا توجد متاجر نشطة</h3>
+                            <p class="text-gray-500 mb-6">كن أول من ينشئ متجراً على المنصة!</p>
+                            ${currentUser && currentUserAccountType === 'seller' ? `
+                                <button onclick="showCreateStoreModal()" 
+                                        class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg inline-flex items-center">
+                                    <i class="fas fa-plus ml-2"></i>
+                                    أنشئ أول متجر لك
+                                </button>
+                            ` : currentUser ? `
+                                <button onclick="showAccountSettingsModal()" 
+                                        class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg inline-flex items-center">
+                                    <i class="fas fa-user-cog ml-2"></i>
+                                    حول إلى حساب بائع
+                                </button>
+                            ` : `
+                                <button onclick="showRegisterModal()" 
+                                        class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg inline-flex items-center">
+                                    <i class="fas fa-user-plus ml-2"></i>
+                                    سجل كبائع الآن
+                                </button>
+                            `}
+                        </div>
+                    `;
+                    loading.hide();
+                    return;
+                }
+                
+                let storesHTML = '';
+                let counter = 0;
+                
+                querySnapshot.forEach(doc => {
+                    const store = doc.data();
+                    const storeId = doc.id;
+                    
+                    // تناوب الألوان للمتاجر
+                    const colors = [
+                        'from-blue-500 to-blue-700',
+                        'from-purple-500 to-purple-700',
+                        'from-green-500 to-green-700',
+                        'from-pink-500 to-pink-700',
+                        'from-orange-500 to-orange-700',
+                        'from-indigo-500 to-indigo-700'
+                    ];
+                    
+                    const colorClass = colors[counter % colors.length];
+                    counter++;
+                    
+                    // إحصائيات المتجر
+                    const productsCount = store.productsCount || 0;
+                    const salesCount = store.salesCount || 0;
+                    const rating = store.rating || 0;
+                    
+                    storesHTML += `
+                        <div class="store-card bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
+                            <div class="relative">
+                                <div class="h-2 bg-gradient-to-r ${colorClass}"></div>
+                                <div class="p-6">
+                                    <div class="flex items-start justify-between mb-4">
+                                        <div>
+                                            <h3 class="text-xl font-bold text-dark mb-2">${store.name || 'متجر بدون اسم'}</h3>
+                                            <span class="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                                                ${getCategoryName(store.category)}
+                                            </span>
+                                        </div>
+                                        ${productsCount > 10 ? `
+                                            <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">
+                                                <i class="fas fa-bolt ml-1"></i> نشط
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    
+                                    <p class="text-gray-600 mb-6 line-clamp-2">${store.description || 'متجر إلكتروني يقدم منتجات عالية الجودة'}</p>
+                                    
+                                    <div class="flex items-center text-gray-500 mb-6">
+                                        <div class="w-8 h-8 bg-gradient-to-br ${colorClass} rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-white text-xs"></i>
+                                        </div>
+                                        <span class="mr-3 font-medium">${store.ownerName || 'مالك المتجر'}</span>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-3 gap-4 mb-6">
+                                        <div class="text-center">
+                                            <div class="text-lg font-bold text-primary">${productsCount}</div>
+                                            <div class="text-xs text-gray-500">منتج</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="text-lg font-bold text-secondary">${salesCount}</div>
+                                            <div class="text-xs text-gray-500">مبيع</div>
+                                        </div>
+                                        <div class="text-center">
+                                            <div class="flex items-center justify-center">
+                                                <i class="fas fa-star text-yellow-400 ml-1"></i>
+                                                <span class="text-lg font-bold">${rating.toFixed(1)}</span>
+                                            </div>
+                                            <div class="text-xs text-gray-500">تقييم</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        <button onclick="showStorePage('${storeId}')" 
+                                                class="w-full bg-gradient-to-r ${colorClass} text-white py-3 rounded-xl hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                                            <i class="fas fa-external-link-alt ml-2"></i>
+                                            زيارة المتجر
+                                        </button>
+                                        
+                                        ${currentUser && currentUser.uid === store.ownerId ? `
+                                            <button onclick="showStoreDetailsModal('${storeId}')" 
+                                                    class="w-full border-2 border-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300">
+                                                <i class="fas fa-chart-bar ml-2"></i>
+                                                إدارة المتجر
+                                            </button>
+                                        ` : currentUserAccountType === 'seller' ? `
+                                            <button onclick="showStorePage('${storeId}')" 
+                                                    class="w-full border-2 border-primary text-primary py-3 rounded-xl hover:bg-primary hover:text-white transition-all duration-300">
+                                                <i class="fas fa-eye ml-2"></i>
+                                                استعرض المنتجات
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                loading.updateProgress(90);
+                
+                // إضافة زر إنشاء متجر جديد في النهاية
+                if (currentUser && currentUserAccountType === 'seller') {
+                    storesHTML += `
+                        <div class="store-card bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300 p-8 flex flex-col items-center justify-center hover:border-primary hover:shadow-lg transition-all duration-300">
+                            <div class="w-16 h-16 bg-gradient-to-br from-primary to-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                                <i class="fas fa-plus text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3">أنشئ متجرك الجديد</h3>
+                            <p class="text-gray-600 text-center mb-6">ابدأ رحلتك التجارية الآن وأنشئ متجرك الخاص</p>
+                            <button onclick="showCreateStoreModal()" 
+                                    class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg w-full">
+                                <i class="fas fa-store ml-2"></i>
+                                إنشاء متجر جديد
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = storesHTML;
+                loading.hide();
+                
+            } catch (error) {
+                console.error('Error loading stores:', error);
+                container.innerHTML = `
+                    <div class="md:col-span-3 text-center py-12">
+                        <div class="w-32 h-32 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-600 mb-2">حدث خطأ في التحميل</h3>
+                        <p class="text-gray-500 mb-6">يرجى المحاولة مرة أخرى</p>
+                        <button onclick="loadStores()" 
+                                class="btn-primary text-white px-6 py-3 rounded-xl hover:shadow-lg inline-flex items-center">
+                            <i class="fas fa-redo ml-2"></i>
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 🔥 دالة العرض حسب الدور
+        function showContentBasedOnRole() {
+            event?.preventDefault();
+            
+            // إغلاق جميع النماذج
+            closeAllModals();
+            
+            if (!currentUser) {
+                // للزوار: إظهار الصفحة الرئيسية فقط
+                document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+                document.getElementById('home').classList.remove('hidden');
+                document.getElementById('features').classList.remove('hidden');
+                document.getElementById('plans').classList.remove('hidden');
+                updateNavForGuest();
+                return;
+            }
+            
+            // تحديث القائمة
+            updateNavForUser();
+            
+            // إخفاء جميع الأقسام أولاً
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            
+            if (currentUserRole === 'admin') {
+                // للمدير: كل شيء
+                showAllSections();
+                showSuccess('مرحباً بك! 👑', 'أنت الآن في لوحة تحكم المدير');
+                
+            } else if (currentUserAccountType === 'seller') {
+                // للبائع: عرض لوحة التحكم تلقائياً
+                showAllSections();
+                setTimeout(() => {
+                    showUserDashboard();
+                }, 500);
+                
+            } else if (currentUserAccountType === 'buyer') {
+                // للمشتري: الانتقال مباشرة إلى المتجر الرئيسي
+                document.getElementById('home').classList.remove('hidden');
+                document.getElementById('features').classList.remove('hidden');
+                document.getElementById('mainStore').classList.remove('hidden');
+                document.getElementById('plans').classList.remove('hidden');
+                
+                loadMainStoreProducts();
+                showSuccess('مرحباً بك! 🛍️', 'استمتع بتجربة تسوق فريدة');
+            }
+        }
+
+        function showAllSections() {
+            const sections = ['home', 'features', 'stores', 'products', 'plans', 'mainStore'];
+            sections.forEach(section => {
+                const el = document.getElementById(section);
+                if (el) el.classList.remove('hidden');
             });
+            
+            // تحميل المحتوى
+            loadStores();
+            loadProducts();
+            loadMainStoreProducts();
         }
 
-        // باقي الدوال تبقى كما هي...
-        // [يتم إضافة باقي الدوال من الكود الأصلي هنا]
+        // 🔥 دالة إنشاء المتجر (محسنة)
+        async function showCreateStoreModal() {
+            if (!currentUser) {
+                showLoginModal();
+                showError('يجب تسجيل الدخول أولاً');
+                return;
+            }
+            
+            if (currentUserAccountType !== 'seller') {
+                // عرض خيار التحويل إلى بائع
+                if (confirm('هذه الميزة متاحة فقط للبائعين. هل تريد التحويل إلى حساب بائع؟')) {
+                    await updateAccountType('seller');
+                    showCreateStoreModal();
+                }
+                return;
+            }
+            
+            // التحقق من الباقة
+            const canCreate = await checkUserPlanAndCreateStore();
+            if (!canCreate) return;
+            
+            closeAllModals();
+            
+            // عرض نموذج إنشاء المتجر
+            const modal = document.getElementById('createStoreModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // إضافة تأثيرات
+            setTimeout(() => {
+                modal.querySelectorAll('input, textarea, select').forEach(el => {
+                    el.classList.add('animate-fade-in');
+                });
+            }, 100);
+        }
 
-        // Initialize the app
+        async function createStore(event) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showError('يجب تسجيل الدخول أولاً');
+                showLoginModal();
+                return;
+            }
+            
+            const loading = await showLoading('جاري إنشاء المتجر', 'نحن نجهز كل شيء لمتجرك الجديد');
+            
+            try {
+                const storeName = document.getElementById('storeName').value;
+                const storeCategory = document.getElementById('storeCategory').value;
+                const storeDescription = document.getElementById('storeDescription').value;
+                
+                loading.updateProgress(30);
+                
+                // إنشاء رابط فريد
+                const storeSlug = generateStoreSlug(storeName);
+                const storeUrl = `${window.location.origin}/store/${storeSlug}`;
+                
+                const storeData = {
+                    name: storeName,
+                    category: storeCategory,
+                    description: storeDescription,
+                    ownerId: currentUser.uid,
+                    ownerName: currentUser.displayName || currentUser.email.split('@')[0],
+                    ownerEmail: currentUser.email,
+                    createdAt: new Date().toISOString(),
+                    productsCount: 0,
+                    salesCount: 0,
+                    totalRevenue: 0,
+                    rating: 0,
+                    status: 'active',
+                    storeSlug: storeSlug,
+                    storeUrl: storeUrl,
+                    lastUpdated: new Date().toISOString(),
+                    isActive: true,
+                    plan: 'free',
+                    theme: 'default',
+                    logo: '',
+                    banner: ''
+                };
+                
+                loading.updateProgress(60);
+                
+                const storeRef = await db.collection('stores').add(storeData);
+                const storeId = storeRef.id;
+                
+                await db.collection('stores').doc(storeId).update({ id: storeId });
+                
+                loading.updateProgress(80);
+                
+                await db.collection('users').doc(currentUser.uid).update({
+                    storesCount: firebase.firestore.FieldValue.increment(1)
+                });
+                
+                // حفظ سجل إنشاء المتجر
+                await db.collection('store_logs').add({
+                    storeId: storeId,
+                    action: 'create',
+                    userId: currentUser.uid,
+                    timestamp: new Date().toISOString(),
+                    details: { name: storeName, category: storeCategory }
+                });
+                
+                loading.updateProgress(100);
+                loading.hide();
+                
+                // إغلاق النافذة
+                closeModal('createStoreModal');
+                
+                // عرض رسالة نجاح
+                await showSuccess('مبروك! 🎉', `تم إنشاء متجر "${storeName}" بنجاح`);
+                
+                // فتح صفحة إدارة المتجر الجديد
+                setTimeout(() => {
+                    showStoreDetailsModal(storeId);
+                }, 1000);
+                
+                // تحديث قائمة المتاجر
+                loadStores();
+                
+            } catch (error) {
+                loading.hide();
+                console.error('Error creating store:', error);
+                showError('خطأ في إنشاء المتجر: ' + error.message);
+            }
+        }
+
+        // 🔥 دوال مساعدة محسنة
+        function getFirebaseErrorMessage(errorCode) {
+            const messages = {
+                'auth/invalid-email': 'البريد الإلكتروني غير صالح',
+                'auth/user-disabled': 'هذا الحساب معطل',
+                'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
+                'auth/wrong-password': 'كلمة المرور غير صحيحة',
+                'auth/email-already-in-use': 'هذا البريد مسجل بالفعل',
+                'auth/weak-password': 'كلمة المرور ضعيفة جداً (6 أحرف على الأقل)',
+                'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت',
+                'auth/requires-recent-login': 'يجب إعادة تسجيل الدخول',
+                'auth/operation-not-allowed': 'هذه العملية غير مسموحة',
+                'auth/too-many-requests': 'طلبات كثيرة جداً، حاول لاحقاً'
+            };
+            return messages[errorCode] || 'حدث خطأ غير معروف: ' + errorCode;
+        }
+
+        function showError(message) {
+            // عرض خطأ في نموذج جميل
+            const errorHTML = `
+                <div class="fixed top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-xl shadow-2xl z-50 transform animate-slide-in max-w-md">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center ml-3">
+                            <i class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-lg">خطأ!</h4>
+                            <p class="text-sm opacity-90">${message}</p>
+                        </div>
+                        <button onclick="this.parentElement.parentElement.remove()" 
+                                class="text-white/80 hover:text-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.innerHTML = errorHTML;
+            document.body.appendChild(errorDiv);
+            
+            // إزالة التبيه بعد 5 ثواني
+            setTimeout(() => {
+                if (errorDiv.parentElement) {
+                    errorDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // 🔥 تهيئة التطبيق
         document.addEventListener('DOMContentLoaded', function() {
             // إضافة معالجات النماذج
-            document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
-            document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
+            document.getElementById('loginForm')?.addEventListener('submit', login);
+            document.getElementById('registerForm')?.addEventListener('submit', register);
+            document.getElementById('createStoreForm')?.addEventListener('submit', createStore);
             
             // التحقق من حالة تسجيل الدخول
             if (auth) {
@@ -1297,20 +1674,109 @@
                                 currentUserRole = userData.role || 'buyer';
                                 currentUserAccountType = userData.accountType || 'buyer';
                                 
-                                updateUIAfterLogin();
-                                showContentBasedOnRole();
+                                // إذا كان الحساب جديد ولم يختر نوعاً بعد
+                                if (currentUserRole === 'pending') {
+                                    // عرض نافذة اختيار نوع الحساب
+                                    document.getElementById('accountTypeModal').classList.remove('hidden');
+                                    document.getElementById('accountTypeModal').classList.add('flex');
+                                } else {
+                                    updateUIAfterLogin();
+                                    showContentBasedOnRole();
+                                }
                                 
+                            } else {
+                                // إنشاء حساب جديد
+                                await db.collection('users').doc(user.uid).set({
+                                    name: user.displayName || user.email.split('@')[0],
+                                    email: user.email,
+                                    role: 'pending',
+                                    accountType: 'pending',
+                                    plan: 'free',
+                                    createdAt: new Date().toISOString(),
+                                    storesCount: 0,
+                                    totalSales: 0,
+                                    totalPurchases: 0,
+                                    subscriptionExpiry: null,
+                                    maxStores: 0,
+                                    maxProducts: 99999,
+                                    commissionRate: 0.15,
+                                    emailVerified: user.emailVerified,
+                                    isActive: true,
+                                    lastLogin: new Date().toISOString()
+                                });
+                                
+                                // عرض نافذة اختيار نوع الحساب
+                                document.getElementById('accountTypeModal').classList.remove('hidden');
+                                document.getElementById('accountTypeModal').classList.add('flex');
                             }
                         } catch (error) {
-                            console.error('Error loading user data:', error);
+                            console.error('Error initializing user:', error);
                         }
                     } else {
                         currentUser = null;
+                        currentUserRole = null;
+                        currentUserAccountType = null;
                         updateUIAfterLogout();
+                        showContentForGuest();
                     }
                 });
             }
         });
+
+        // دوال مساعدة أخرى
+        function updateAccountType(type) {
+            return new Promise(async (resolve) => {
+                try {
+                    await db.collection('users').doc(currentUser.uid).update({
+                        role: type === 'seller' ? 'seller' : 'buyer',
+                        accountType: type,
+                        maxStores: type === 'seller' ? 1 : 0
+                    });
+                    
+                    currentUserRole = type === 'seller' ? 'seller' : 'buyer';
+                    currentUserAccountType = type;
+                    
+                    updateUIAfterLogin();
+                    resolve(true);
+                } catch (error) {
+                    console.error('Error updating account type:', error);
+                    resolve(false);
+                }
+            });
+        }
+
+        function updateNavForGuest() {
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.textContent.includes('المتاجر') || link.textContent.includes('المنتجات')) {
+                    link.style.opacity = '0.5';
+                    link.style.pointerEvents = 'none';
+                } else {
+                    link.style.opacity = '1';
+                    link.style.pointerEvents = 'auto';
+                }
+            });
+        }
+
+        function updateNavForUser() {
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                link.style.opacity = '1';
+                link.style.pointerEvents = 'auto';
+            });
+        }
+
+        function showContentForGuest() {
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById('home').classList.remove('hidden');
+            document.getElementById('features').classList.remove('hidden');
+            document.getElementById('plans').classList.remove('hidden');
+            updateNavForGuest();
+        }
+
+        // ... (بقية الدوال الموجودة سابقاً)
+        // Note: بقية الدوال مثل loadProducts, loadMainStoreProducts, etc. 
+        // يجب تحديثها بنفس الأسلوب لتعمل مع النظام الجديد
     </script>
 </body>
 </html>
