@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استيراد المنتجات - منصتي</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🛒 استيراد المنتجات</div>
+            <nav>
+                <a href="../index.html">الرئيسية</a>
+                <a href="../vendor/dashboard.html">رجوع</a>
+            </nav>
+        </header>
+
+        <section class="dashboard">
+            <div class="hero">
+                <h1>استيراد منتجات من أمازون</h1>
+                <p>أضف آلاف المنتجات إلى متجرك بضغطة زر واحصل على عمولة</p>
+            </div>
+
+            <div class="feature-card" style="max-width: 800px; margin: 0 auto;">
+                <h3>كيف يعمل؟</h3>
+                <ol style="text-align: right; padding-right: 20px; margin: 1rem 0;">
+                    <li>ابحث عن منتج على أمازون</li>
+                    <li>انسخ رابط المنتج</li>
+                    <li>الصق الرابط هنا</li>
+                    <li>سيتم إضافة المنتج إلى متجرك تلقائياً</li>
+                    <li>عند البيع، تربح عمولة من أمازون</li>
+                </ol>
+            </div>
+
+            <!-- نموذج الاستيراد -->
+            <div class="feature-card" style="max-width: 800px; margin: 2rem auto;">
+                <h3>استيراد الآن</h3>
+                
+                <div style="margin: 2rem 0;">
+                    <input type="text" id="amazon-url" 
+                           placeholder="https://www.amazon.com/dp/B08XYZ123..." 
+                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px;">
+                    
+                    <button onclick="importProduct()" class="btn btn-primary" style="margin-top: 1rem; width: 100%;">
+                        🔄 استيراد المنتج
+                    </button>
+                </div>
+
+                <div id="import-result"></div>
+            </div>
+
+            <!-- المنتجات المستوردة -->
+            <h3 style="margin-top: 3rem;">منتجات مقترحة من أمازون</h3>
+            <div id="suggested-products" class="products-grid">
+                <!-- ستظهر المنتجات هنا -->
+            </div>
+        </section>
+
+        <footer>
+            <p>ملاحظة: المنتجات مستوردة عبر برنامج Amazon Associates</p>
+            <p>عمولة تصل إلى 10% على كل عملية بيع</p>
+        </footer>
+    </div>
+
+    <script src="../app.js"></script>
+    <script>
+        function importProduct() {
+            const url = document.getElementById('amazon-url').value;
+            
+            if (!url.includes('amazon.com') && !url.includes('amazon.eg')) {
+                showAlert('يرجى إدخال رابط أمازون صحيح', 'error');
+                return;
+            }
+
+            showAlert('جاري استيراد المنتج...', 'info');
+            
+            // محاكاة الاستيراد
+            setTimeout(() => {
+                const resultDiv = document.getElementById('import-result');
+                resultDiv.innerHTML = `
+                    <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                        <h4 style="color: #2e7d32;">✅ تم الاستيراد بنجاح!</h4>
+                        <p>تم إضافة المنتج إلى متجرك</p>
+                        <p>عمولة أمازون: 8% على كل عملية بيع</p>
+                        <a href="../vendor/dashboard.html" class="btn" style="margin-top: 1rem;">عرض في متجري</a>
+                    </div>
+                `;
+            }, 2000);
+        }
+
+        // تحميل منتجات مقترحة
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSuggestedProducts();
+        });
+
+        function loadSuggestedProducts() {
+            const suggested = [
+                {
+                    id: 101,
+                    name: 'لوحة مفاتيح لاسلكية',
+                    price: 49.99,
+                    image: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=300&fit=crop',
+                    amazonUrl: 'https://www.amazon.com/dp/B08XYZ123'
+                },
+                {
+                    id: 102,
+                    name: 'ماوس ألعاب',
+                    price: 39.99,
+                    image: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=400&h=300&fit=crop',
+                    amazonUrl: 'https://www.amazon.com/dp/B08ABC456'
+                }
+            ];
+
+            const container = document.getElementById('suggested-products');
+            suggested.forEach(product => {
+                container.innerHTML += `
+                    <div class="product-card">
+                        <img src="${product.image}" alt="${product.name}" class="product-img">
+                        <div class="product-info">
+                            <h4>${product.name}</h4>
+                            <p class="price">$${product.price}</p>
+                            <button onclick="importSuggested('${product.amazonUrl}')" class="btn btn-primary">
+                                استيراد هذا المنتج
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function importSuggested(url) {
+            document.getElementById('amazon-url').value = url;
+            importProduct();
+        }
+    </script>
+</body>
+</html>
