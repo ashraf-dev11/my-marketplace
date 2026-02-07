@@ -1,279 +1,838 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <base target="_self">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصتي - منصة المتاجر الإلكترونية</title>
-    
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="mobile-style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>منصة متاجر - منصة متكاملة للتجارة الإلكترونية</title>
+    <meta name="description" content="منصة متكاملة لإنشاء متاجر إلكترونية، إدارة البائعين، ومراقبة المبيعات مع نظام عمولات">
     
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Meta Tags -->
-    <meta name="description" content="منصة متاجر إلكترونية متكاملة مع Firebase - أنشئ متجرك واربح من أمازون">
-    <meta name="keywords" content="متاجر, تجارة إلكترونية, أمازون, عمولة, Firebase">
-    <meta name="author" content="منصتي">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6",
+                        secondary: "#10B981",
+                        accent: "#F59E0B",
+                        dark: "#1F2937",
+                        light: "#F9FAFB"
+                    },
+                    fontFamily: {
+                        'cairo': ['Cairo', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .store-card { transition: all 0.3s ease; }
+        .store-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
 </head>
-<body>
-    <!-- شاشة التحميل -->
-    <div id="loading-screen">
-        <div class="loader"></div>
-        <p>جاري تحميل النظام...</p>
-    </div>
-
-    <!-- الهيدر -->
-    <header id="main-header">
-        <div class="container">
-            <div class="logo">
-                <img src="assets/logo.png" alt="شعار منصتي" class="logo-img">
-                <span>منصتي</span>
+<body class="bg-gray-50 font-cairo">
+    <!-- Header Navigation -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2 space-x-reverse">
+                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                        <i class="fas fa-store text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-dark">منصة متاجر</h1>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-6 space-x-reverse">
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('home')">الرئيسية</a>
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('stores')">المتاجر</a>
+                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('products')">المنتجات</a>
+                </div>
+                
+                <div class="flex items-center space-x-4 space-x-reverse" id="authButtons">
+                    <!-- سيتم تحديث هذا القسم تلقائياً -->
+                    <button onclick="showLoginModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-sign-in-alt ml-2"></i>
+                        تسجيل الدخول
+                    </button>
+                    <button onclick="showRegisterModal()" class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
+                        <i class="fas fa-user-plus ml-2"></i>
+                        إنشاء حساب
+                    </button>
+                </div>
+                
+                <button class="md:hidden text-dark" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
             </div>
             
-            <nav id="main-nav">
-                <a href="#home" class="nav-link active"><i class="fas fa-home"></i> الرئيسية</a>
-                <a href="#features" class="nav-link"><i class="fas fa-star"></i> المميزات</a>
-                <a href="#how-it-works" class="nav-link"><i class="fas fa-play-circle"></i> كيف تعمل</a>
-                <a href="#pricing" class="nav-link"><i class="fas fa-tag"></i> الأسعار</a>
-                
-                <div class="nav-buttons" id="auth-buttons">
-                    <!-- سيتم تعبئتها بالجافاسكريبت -->
-                </div>
-            </nav>
-            
-            <button class="menu-toggle" id="mobile-menu-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-        </div>
+            <!-- Mobile Menu -->
+            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4">
+                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('home')">الرئيسية</a>
+                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('stores')">المتاجر</a>
+                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('products')">المنتجات</a>
+            </div>
+        </nav>
     </header>
 
-    <!-- القسم الرئيسي -->
-    <section class="hero-section" id="home">
-        <div class="container">
-            <div class="hero-content">
-                <h1 class="hero-title">
-                    <span class="highlight">أنشئ متجرك الإلكتروني</span>
-                    <br>واربح مع أمازون وبائعين آخرين
-                </h1>
-                
-                <p class="hero-subtitle">
-                    منصة متكاملة تربح فيها من 
-                    <strong class="amazon-highlight">عمولة أمازون</strong> + 
-                    <strong class="vendor-highlight">اشتراكات البائعين</strong>
-                </p>
-                
-                <div class="hero-actions">
-                    <button class="btn btn-primary btn-large" id="start-free-btn">
-                        <i class="fas fa-rocket"></i> ابدأ مجاناً الآن
-                    </button>
-                    <button class="btn btn-secondary btn-large" id="watch-demo-btn">
-                        <i class="fas fa-play-circle"></i> شاهد شرح الفيديو
-                    </button>
-                </div>
-
-                <!-- إحصائيات حية -->
-                <div class="hero-stats" id="live-stats">
-                    <div class="stat-item">
-                        <h3 class="stat-number" id="total-vendors">0</h3>
-                        <p class="stat-label"><i class="fas fa-store"></i> بائع نشط</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3 class="stat-number" id="total-products">0</h3>
-                        <p class="stat-label"><i class="fas fa-box"></i> منتج متاح</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3 class="stat-number" id="total-sales">$0</h3>
-                        <p class="stat-label"><i class="fas fa-chart-line"></i> مبيعات</p>
-                    </div>
-                    <div class="stat-item">
-                        <h3 class="stat-number">10%</h3>
-                        <p class="stat-label"><i class="fab fa-amazon"></i> عمولة أمازون</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="hero-visual">
-                <img src="assets/hero-image.jpg" alt="لوحة تحكم المتجر" class="hero-image">
-                <div class="floating-card" id="demo-card">
-                    <div class="card-header">
-                        <i class="fas fa-chart-bar"></i>
-                        <h4>متجر أحمد</h4>
-                    </div>
-                    <div class="card-body">
-                        <p>✅ 24 منتج نشط</p>
-                        <p>💰 $1,250 مبيعات</p>
-                        <p>📈 10% نمو أسبوعي</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- المميزات -->
-    <section class="features-section" id="features">
-        <div class="container">
-            <h2 class="section-title">
-                لماذا تختار <span class="highlight">منصتي</span>؟
-                <span class="section-badge">الأفضل في السوق</span>
-            </h2>
-            
-            <div class="features-grid">
-                <!-- سيتم تعبئتها بالجافاسكريبت -->
-            </div>
-        </div>
-    </section>
-
-    <!-- كيف تعمل -->
-    <section class="how-it-works-section" id="how-it-works">
-        <div class="container">
-            <h2 class="section-title">كيف تبدأ ربحك في 4 خطوات؟</h2>
-            
-            <div class="steps-timeline">
-                <!-- سيتم تعبئتها بالجافاسكريبت -->
-            </div>
-        </div>
-    </section>
-
-    <!-- خطط الأسعار -->
-    <section class="pricing-section" id="pricing">
-        <div class="container">
-            <h2 class="section-title">خطط أسعار تناسب كل الأعمال</h2>
-            
-            <div class="pricing-switch">
-                <span>شهري</span>
-                <label class="switch">
-                    <input type="checkbox" id="pricing-toggle">
-                    <span class="slider"></span>
-                </label>
-                <span>سنوي <span class="discount-badge">وفر 20%</span></span>
-            </div>
-            
-            <div class="pricing-cards" id="pricing-cards">
-                <!-- سيتم تعبئتها بالجافاسكريبت -->
-            </div>
-        </div>
-    </section>
-
-    <!-- الأسئلة الشائعة -->
-    <section class="faq-section" id="faq">
-        <div class="container">
-            <h2 class="section-title">أسئلة متكررة</h2>
-            
-            <div class="faq-container">
-                <!-- سيتم تعبئتها بالجافاسكريبت -->
-            </div>
-        </div>
-    </section>
-
-    <!-- الفوتر -->
-    <footer class="main-footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-col">
-                    <div class="footer-logo">
-                        <img src="assets/logo.png" alt="شعار منصتي">
-                        <h3>منصتي</h3>
-                    </div>
-                    <p class="footer-description">
-                        منصة تجارة إلكترونية متكاملة تساعدك على إنشاء متجرك
-                        وربح عمولات من أمازون والمبيعات.
-                    </p>
-                    <div class="footer-social">
-                        <a href="#" class="social-icon"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
-                    </div>
-                </div>
-                
-                <div class="footer-col">
-                    <h4 class="footer-title">روابط سريعة</h4>
-                    <ul class="footer-links">
-                        <li><a href="#home">الرئيسية</a></li>
-                        <li><a href="#features">المميزات</a></li>
-                        <li><a href="#how-it-works">كيف تعمل</a></li>
-                        <li><a href="#pricing">الأسعار</a></li>
-                        <li><a href="#faq">الأسئلة الشائعة</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-col">
-                    <h4 class="footer-title">المنصات</h4>
-                    <ul class="footer-links">
-                        <li><a href="#" id="vendor-dashboard-link">لوحة البائع</a></li>
-                        <li><a href="#" id="admin-dashboard-link">لوحة التحكم</a></li>
-                        <li><a href="#" id="import-products-link">استيراد منتجات</a></li>
-                        <li><a href="#" id="sales-report-link">تقارير المبيعات</a></li>
-                    </ul>
-                </div>
-                
-                <div class="footer-col">
-                    <h4 class="footer-title">النشرة البريدية</h4>
-                    <p class="footer-text">اشترك للحصول على آخر التحديثات والعروض</p>
-                    <form class="newsletter-form" id="newsletter-form">
-                        <input type="email" placeholder="بريدك الإلكتروني" required>
-                        <button type="submit">
-                            <i class="fas fa-paper-plane"></i> اشتراك
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="gradient-bg text-white py-20">
+            <div class="container mx-auto px-4">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h2 class="text-4xl md:text-5xl font-bold mb-6">أنشئ متجرك الإلكتروني في دقائق</h2>
+                    <p class="text-xl mb-8 opacity-90">منصة متكاملة تمكنك من إنشاء متجرك الخاص، استيراد منتجات من أمازون، وإدارة مبيعاتك بكل سهولة</p>
+                    <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
+                        <button onclick="showRegisterModal()" class="bg-white text-primary px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">
+                            <i class="fas fa-store ml-2"></i>
+                            ابدأ مجاناً
                         </button>
-                    </form>
-                    <div class="footer-contact">
-                        <p><i class="fas fa-envelope"></i> info@my-platform.com</p>
-                        <p><i class="fas fa-phone"></i> +20 100 000 0000</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-copyright">
-                    <p>© 2024 منصتي. جميع الحقوق محفوظة.</p>
-                    <p id="current-date">--/--/----</p>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center text-dark mb-12">مميزات المنصة</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
+                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-store text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">إنشاء متجر خاص</h3>
+                        <p class="text-gray-600">أنشئ متجرك الخاص بكامل المواصفات في دقائق معدودة</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
+                        <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shopping-cart text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">استيراد من أمازون</h3>
+                        <p class="text-gray-600">استورد منتجات مباشرة من أمازون ومنصات التسوق العالمية</p>
+                    </div>
+                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
+                        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-chart-line text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold mb-3">إدارة وتحليل</h3>
+                        <p class="text-gray-600">لوحة تحكم متكاملة لمتابعة المبيعات والإحصائيات</p>
+                    </div>
                 </div>
-                
-                <div class="footer-extra">
-                    <p id="system-status"><i class="fas fa-circle"></i> جاري التحميل...</p>
-                    <button class="btn btn-small" id="firebase-test-btn">
-                        <i class="fas fa-plug"></i> اختبار Firebase
+            </div>
+        </section>
+
+        <!-- Stores Section -->
+        <section id="stores" class="py-16 bg-gray-50">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold text-dark">المتاجر النشطة</h2>
+                    <button onclick="showCreateStoreModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-plus ml-2"></i>
+                        إنشاء متجر جديد
                     </button>
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="storesContainer">
+                    <!-- سيتم تحميل المتاجر من Firebase هنا -->
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                        <p class="mt-2 text-gray-600">جاري تحميل المتاجر...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section -->
+        <section id="products" class="py-16 bg-white">
+            <div class="container mx-auto px-4">
+                <h2 class="text-3xl font-bold text-center text-dark mb-8">المنتجات المتاحة</h2>
+                <div class="mb-8">
+                    <div class="flex justify-between items-center">
+                        <div class="relative w-full md:w-96">
+                            <input type="text" id="searchProducts" placeholder="ابحث عن منتج..." 
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10">
+                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="productsContainer">
+                    <!-- سيتم تحميل المنتجات من Firebase هنا -->
+                    <div class="text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+                        <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 space-x-reverse mb-4">
+                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                            <i class="fas fa-store text-white text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">منصة متاجر</h3>
+                    </div>
+                    <p class="text-gray-400">منصة متكاملة لإنشاء وإدارة المتاجر الإلكترونية</p>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('home')">الرئيسية</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('stores')">المتاجر</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('products')">المنتجات</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">اتصل بنا</h4>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <i class="fas fa-envelope text-gray-400"></i>
+                            <span class="text-gray-400">info@storeplatform.com</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+                <p>© 2024 منصة متاجر. جميع الحقوق محفوظة.</p>
             </div>
         </div>
     </footer>
 
-    <!-- لوحة تحكم Firebase -->
-    <div id="firebase-control-panel">
-        <!-- سيتم إنشاؤها بالجافاسكريبت -->
+    <!-- Modals -->
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-dark">تسجيل الدخول</h3>
+                <button onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="loginForm" onsubmit="login(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">كلمة المرور</label>
+                    <input type="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 mb-4">
+                    تسجيل الدخول
+                </button>
+                <div class="text-center">
+                    <p class="text-gray-600">أو</p>
+                    <button type="button" onclick="loginWithGoogle()" class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 mt-4">
+                        <i class="fab fa-google ml-2 text-red-500"></i>
+                        تسجيل الدخول بحساب جيميل
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- الإشعارات -->
-    <div id="notification-container"></div>
+    <!-- Register Modal -->
+    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-dark">إنشاء حساب جديد</h3>
+                <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="registerForm" onsubmit="register(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">الاسم الكامل</label>
+                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
+                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 mb-2">كلمة المرور</label>
+                    <input type="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" required class="ml-2">
+                        <span class="text-gray-700">أوافق على الشروط والأحكام</span>
+                    </label>
+                </div>
+                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 mb-4">
+                    إنشاء حساب
+                </button>
+                <div class="text-center">
+                    <p class="text-gray-600">أو</p>
+                    <button type="button" onclick="registerWithGoogle()" class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 mt-4">
+                        <i class="fab fa-google ml-2 text-red-500"></i>
+                        التسجيل بحساب جيميل
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- النماذج المنبثقة -->
-    <div id="modal-container"></div>
+    <!-- Create Store Modal -->
+    <div id="createStoreModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl max-w-2xl w-full p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-dark">إنشاء متجر جديد</h3>
+                <button onclick="closeModal('createStoreModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <form id="createStoreForm" onsubmit="createStore(event)">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-gray-700 mb-2">اسم المتجر</label>
+                        <input type="text" id="storeName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 mb-2">فئة المتجر</label>
+                        <select id="storeCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="electronics">إلكترونيات</option>
+                            <option value="clothing">ملابس</option>
+                            <option value="home">منزلية</option>
+                            <option value="books">كتب</option>
+                            <option value="sports">رياضية</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-gray-700 mb-2">وصف المتجر</label>
+                        <textarea id="storeDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
+                    <button type="button" onclick="closeModal('createStoreModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</button>
+                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-check ml-2"></i>
+                        إنشاء المتجر
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- JavaScript Files -->
-    <script src="firebase-config.js"></script>
-    <script src="app.js"></script>
-    <script src="auth.js"></script>
-    <script src="products.js"></script>
-    <script src="vendor-panel.js"></script>
-    <script src="admin-panel.js"></script>
-    
-    <!-- الصفحات الإضافية (لود عند الطلب) -->
-    <template id="vendor-dashboard-template">
-        <!-- قالب لوحة البائع -->
-    </template>
-    
-    <template id="admin-dashboard-template">
-        <!-- قالب لوحة التحكم -->
-    </template>
+    <!-- Success Toast -->
+    <div id="successToast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center">
+            <i class="fas fa-check-circle ml-2"></i>
+            <span id="toastMessage">تمت العملية بنجاح!</span>
+        </div>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="errorToast" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-circle ml-2"></i>
+            <span id="errorMessage">حدث خطأ!</span>
+        </div>
+    </div>
+
+    <script>
+        // 🔥 Firebase Configuration - استخدم بياناتك هنا
+        const firebaseConfig = {
+            apiKey: "AIzaSyBVrMvnMoKDcP_BBa9umCXXG2T3nQcwc9Q",
+            authDomain: "my-platform-7fe2a.firebaseapp.com",
+            projectId: "my-platform-7fe2a",
+            storageBucket: "my-platform-7fe2a.firebasestorage.app",
+            messagingSenderId: "942843794284",
+            appId: "1:942843794284:web:c36e851cd04301ca985949"
+        };
+
+        // تهيئة Firebase
+        let auth, db;
+        let currentUser = null;
+        
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            console.log("✅ Firebase جاهز للعمل");
+        } catch (error) {
+            console.error("❌ خطأ في Firebase:", error);
+        }
+
+        // Navigation function
+        function navigateTo(section) {
+            event.preventDefault();
+            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section).classList.remove('hidden');
+            document.getElementById('mobileMenu').classList.add('hidden');
+        }
+
+        // Modal functions
+        function showLoginModal() {
+            closeAllModals();
+            document.getElementById('loginModal').classList.remove('hidden');
+            document.getElementById('loginModal').classList.add('flex');
+        }
+
+        function showRegisterModal() {
+            closeAllModals();
+            document.getElementById('registerModal').classList.remove('hidden');
+            document.getElementById('registerModal').classList.add('flex');
+        }
+
+        function showCreateStoreModal() {
+            if (!currentUser) {
+                showLoginModal();
+                return;
+            }
+            closeAllModals();
+            document.getElementById('createStoreModal').classList.remove('hidden');
+            document.getElementById('createStoreModal').classList.add('flex');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        function closeAllModals() {
+            document.querySelectorAll('[id$="Modal"]').forEach(modal => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+        }
+
+        function toggleMobileMenu() {
+            document.getElementById('mobileMenu').classList.toggle('hidden');
+        }
+
+        // 🔥 Firebase Authentication Functions
+        async function login(event) {
+            event.preventDefault();
+            
+            const email = event.target.querySelector('input[type="email"]').value;
+            const password = event.target.querySelector('input[type="password"]').value;
+            
+            try {
+                showToast('جاري تسجيل الدخول...');
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+                showToast(`مرحباً ${currentUser.email}`, 'success');
+                closeModal('loginModal');
+                updateUIAfterLogin();
+            } catch (error) {
+                showError(getFirebaseErrorMessage(error.code));
+            }
+        }
+
+        async function register(event) {
+            event.preventDefault();
+            
+            const name = event.target.querySelector('input[type="text"]').value;
+            const email = event.target.querySelector('input[type="email"]').value;
+            const password = event.target.querySelector('input[type="password"]').value;
+            
+            try {
+                showToast('جاري إنشاء الحساب...');
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                currentUser = userCredential.user;
+                
+                // تحديث اسم المستخدم
+                await currentUser.updateProfile({ displayName: name });
+                
+                // حفظ بيانات إضافية في Firestore
+                await db.collection('users').doc(currentUser.uid).set({
+                    name: name,
+                    email: email,
+                    role: 'seller',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                showToast(`مرحباً ${name}، تم إنشاء حسابك`, 'success');
+                closeModal('registerModal');
+                updateUIAfterLogin();
+            } catch (error) {
+                showError(getFirebaseErrorMessage(error.code));
+            }
+        }
+
+        async function loginWithGoogle() {
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                showToast('جاري تسجيل الدخول...');
+                const result = await auth.signInWithPopup(provider);
+                currentUser = result.user;
+                
+                // التحقق إذا كان المستخدم جديداً
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (!userDoc.exists) {
+                    await db.collection('users').doc(currentUser.uid).set({
+                        name: currentUser.displayName,
+                        email: currentUser.email,
+                        role: 'seller',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                
+                showToast(`مرحباً ${currentUser.displayName}`, 'success');
+                closeModal('loginModal');
+                updateUIAfterLogin();
+            } catch (error) {
+                showError(getFirebaseErrorMessage(error.code));
+            }
+        }
+
+        function registerWithGoogle() {
+            loginWithGoogle();
+        }
+
+        async function logout() {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                showToast('تم تسجيل الخروج', 'success');
+                updateUIAfterLogout();
+            } catch (error) {
+                showError('خطأ في تسجيل الخروج');
+            }
+        }
+
+        // 🔥 Firestore Functions
+        async function createStore(event) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showError('يجب تسجيل الدخول أولاً');
+                return;
+            }
+            
+            const storeName = document.getElementById('storeName').value;
+            const storeCategory = document.getElementById('storeCategory').value;
+            const storeDescription = document.getElementById('storeDescription').value;
+            
+            try {
+                showToast('جاري إنشاء المتجر...');
+                
+                const storeData = {
+                    name: storeName,
+                    category: storeCategory,
+                    description: storeDescription,
+                    ownerId: currentUser.uid,
+                    ownerName: currentUser.displayName || currentUser.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    products: 0,
+                    sales: 0,
+                    rating: 0
+                };
+                
+                await db.collection('stores').add(storeData);
+                
+                showToast('تم إنشاء المتجر بنجاح', 'success');
+                closeModal('createStoreModal');
+                loadStores();
+            } catch (error) {
+                showError('خطأ في إنشاء المتجر');
+            }
+        }
+
+        async function loadStores() {
+            const container = document.getElementById('storesContainer');
+            
+            try {
+                const querySnapshot = await db.collection('stores').orderBy('createdAt', 'desc').get();
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = `
+                        <div class="md:col-span-3 text-center py-12">
+                            <i class="fas fa-store text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">لا توجد متاجر بعد</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let storesHTML = '';
+                querySnapshot.forEach(doc => {
+                    const store = doc.data();
+                    const storeId = doc.id;
+                    
+                    storesHTML += `
+                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <div class="flex justify-between items-start mb-3">
+                                    <h3 class="text-xl font-bold text-dark">${store.name}</h3>
+                                    <span class="bg-primary text-white text-sm px-3 py-1 rounded-full">${getCategoryName(store.category)}</span>
+                                </div>
+                                <p class="text-gray-600 mb-4">${store.description || 'لا يوجد وصف'}</p>
+                                <div class="flex items-center text-gray-500 mb-4">
+                                    <i class="fas fa-user ml-2"></i>
+                                    <span>${store.ownerName}</span>
+                                </div>
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-primary">${store.products || 0}</div>
+                                        <div class="text-sm text-gray-500">منتج</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-secondary">${store.sales || 0}</div>
+                                        <div class="text-sm text-gray-500">مبيع</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="text-lg font-bold text-accent">${store.rating || 0}</div>
+                                        <div class="text-sm text-gray-500">تقييم</div>
+                                    </div>
+                                </div>
+                                <button onclick="visitStore('${storeId}')" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class="fas fa-external-link-alt ml-2"></i>
+                                    زيارة المتجر
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = storesHTML;
+            } catch (error) {
+                console.error('Error loading stores:', error);
+                showError('خطأ في تحميل المتاجر');
+            }
+        }
+
+        async function loadProducts() {
+            const container = document.getElementById('productsContainer');
+            
+            try {
+                const querySnapshot = await db.collection('products').orderBy('createdAt', 'desc').get();
+                
+                if (querySnapshot.empty) {
+                    container.innerHTML = `
+                        <div class="md:col-span-4 text-center py-12">
+                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">لا توجد منتجات بعد</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let productsHTML = '';
+                querySnapshot.forEach(doc => {
+                    const product = doc.data();
+                    const productId = doc.id;
+                    
+                    productsHTML += `
+                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
+                            <div class="p-6">
+                                <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
+                                <p class="text-gray-600 text-sm mb-4">${product.description || 'لا يوجد وصف'}</p>
+                                <div class="flex justify-between items-center mb-4">
+                                    <div>
+                                        <span class="text-2xl font-bold text-primary">$${product.price}</span>
+                                        ${product.originalPrice ? 
+                                            `<span class="text-gray-500 line-through mr-2">$${product.originalPrice}</span>` : 
+                                            ''
+                                        }
+                                    </div>
+                                    ${product.source === 'amazon' ? 
+                                        '<span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">أمازون</span>' : 
+                                        '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">محلي</span>'
+                                    }
+                                </div>
+                                ${currentUser ? `
+                                    <button onclick="addToStore('${productId}')" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                                        <i class="fas fa-plus ml-2"></i>
+                                        إضافة للمتجر
+                                    </button>
+                                ` : `
+                                    <button onclick="showLoginModal()" class="w-full border border-primary text-primary py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
+                                        <i class="fas fa-sign-in-alt ml-2"></i>
+                                        سجل الدخول للإضافة
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = productsHTML;
+            } catch (error) {
+                console.error('Error loading products:', error);
+                showError('خطأ في تحميل المنتجات');
+            }
+        }
+
+        async function addToStore(productId) {
+            if (!currentUser) {
+                showError('يجب تسجيل الدخول أولاً');
+                return;
+            }
+            
+            showToast('جاري إضافة المنتج للمتجر...');
+            
+            try {
+                // هنا يمكنك إضافة المنتج لمتجر المستخدم
+                // يمكنك إنشاء نافذة لاختيار المتجر أو إضافته للمتجر الافتراضي
+                
+                // مثلاً: إضافة المنتج لمتجر واحد افتراضي للمستخدم
+                const userStores = await db.collection('stores')
+                    .where('ownerId', '==', currentUser.uid)
+                    .get();
+                
+                if (userStores.empty) {
+                    showError('ليس لديك متاجر، أنشئ متجر أولاً');
+                    return;
+                }
+                
+                const firstStore = userStores.docs[0];
+                const storeId = firstStore.id;
+                
+                // حفظ المنتج في متجر المستخدم
+                await db.collection('store_products').add({
+                    storeId: storeId,
+                    productId: productId,
+                    addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'active'
+                });
+                
+                showToast('تم إضافة المنتج للمتجر', 'success');
+            } catch (error) {
+                showError('خطأ في إضافة المنتج');
+            }
+        }
+
+        function visitStore(storeId) {
+            // يمكنك إنشاء صفحة منفصلة للمتجر
+            alert(`سيتم فتح متجر ${storeId} - هذه الميزة قيد التطوير`);
+        }
+
+        // Helper functions
+        function getCategoryName(category) {
+            const categories = {
+                'electronics': 'إلكترونيات',
+                'clothing': 'ملابس',
+                'home': 'منزلية',
+                'books': 'كتب',
+                'sports': 'رياضية'
+            };
+            return categories[category] || category;
+        }
+
+        function getFirebaseErrorMessage(errorCode) {
+            const messages = {
+                'auth/invalid-email': 'البريد الإلكتروني غير صالح',
+                'auth/user-disabled': 'هذا الحساب معطل',
+                'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
+                'auth/wrong-password': 'كلمة المرور غير صحيحة',
+                'auth/email-already-in-use': 'هذا البريد مسجل بالفعل',
+                'auth/weak-password': 'كلمة المرور ضعيفة جداً',
+                'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت'
+            };
+            return messages[errorCode] || 'حدث خطأ غير معروف';
+        }
+
+        // UI Update functions
+        function updateUIAfterLogin() {
+            const authButtons = document.getElementById('authButtons');
+            
+            authButtons.innerHTML = `
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="text-right hidden md:block">
+                        <p class="font-semibold text-dark">${currentUser.displayName || currentUser.email}</p>
+                        <p class="text-sm text-gray-600">بائع</p>
+                    </div>
+                    <button onclick="logout()" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors">
+                        <i class="fas fa-sign-out-alt ml-2"></i>
+                        تسجيل الخروج
+                    </button>
+                </div>
+            `;
+            
+            // إعادة تحميل البيانات
+            loadStores();
+            loadProducts();
+        }
+
+        function updateUIAfterLogout() {
+            const authButtons = document.getElementById('authButtons');
+            
+            authButtons.innerHTML = `
+                <button onclick="showLoginModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class="fas fa-sign-in-alt ml-2"></i>
+                    تسجيل الدخول
+                </button>
+                <button onclick="showRegisterModal()" class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
+                    <i class="fas fa-user-plus ml-2"></i>
+                    إنشاء حساب
+                </button>
+            `;
+            
+            // إعادة تحميل البيانات
+            loadStores();
+            loadProducts();
+        }
+
+        // Toast functions
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('successToast');
+            const errorToast = document.getElementById('errorToast');
+            
+            if (type === 'success') {
+                document.getElementById('toastMessage').textContent = message;
+                toast.classList.remove('hidden');
+                setTimeout(() => toast.classList.add('hidden'), 3000);
+            } else {
+                showError(message);
+            }
+        }
+
+        function showError(message) {
+            const errorToast = document.getElementById('errorToast');
+            document.getElementById('errorMessage').textContent = message;
+            errorToast.classList.remove('hidden');
+            setTimeout(() => errorToast.classList.add('hidden'), 3000);
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // مراقبة حالة تسجيل الدخول
+            if (auth) {
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        currentUser = user;
+                        updateUIAfterLogin();
+                    } else {
+                        currentUser = null;
+                        updateUIAfterLogout();
+                    }
+                });
+            }
+            
+            // تحميل البيانات الأولية
+            loadStores();
+            loadProducts();
+            
+            // إعداد البحث
+            document.getElementById('searchProducts').addEventListener('input', function(e) {
+                // يمكن إضافة وظيفة البحث هنا
+                console.log('بحث عن:', e.target.value);
+            });
+            
+            // تفعيل النماذج
+            document.getElementById('loginForm').addEventListener('submit', login);
+            document.getElementById('registerForm').addEventListener('submit', register);
+            document.getElementById('createStoreForm').addEventListener('submit', createStore);
+        });
+    </script>
 </body>
 </html>
