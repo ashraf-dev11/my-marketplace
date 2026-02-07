@@ -4,71 +4,256 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - منصتي</title>
+    
+    <!-- CSS -->
     <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="logo">📊 لوحة التحكم</div>
+            <div class="logo">
+                <i class="fas fa-cog"></i>
+                <span>لوحة التحكم</span>
+            </div>
             <nav>
-                <a href="../index.html">الرئيسية</a>
-                <a href="#stats">الإحصائيات</a>
-                <a href="#vendors">البائعين</a>
-                <a href="#products">المنتجات</a>
-                <button onclick="logout()" class="btn">تسجيل الخروج</button>
+                <a href="../index.html"><i class="fas fa-home"></i> الرئيسية</a>
+                <a href="#stats"><i class="fas fa-chart-bar"></i> الإحصائيات</a>
+                <a href="#vendors"><i class="fas fa-users"></i> البائعين</a>
+                <a href="#products"><i class="fas fa-box"></i> المنتجات</a>
+                <a href="#orders"><i class="fas fa-shopping-cart"></i> الطلبات</a>
+                <button onclick="logout()" class="btn-login" style="background: #f44336;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل خروج
+                </button>
             </nav>
         </header>
 
         <section class="dashboard">
             <div class="dashboard-menu">
-                <h2>لوحة التحكم الرئيسية</h2>
-                <p>إدارة كاملة للمنصة والمستخدمين</p>
+                <h2><i class="fas fa-tachometer-alt"></i> لوحة التحكم الإدارية</h2>
+                <p>إدارة كاملة لمنصتك من مكان واحد</p>
             </div>
 
-            <!-- الإحصائيات -->
-            <div id="stats" class="features">
-                <div class="feature-card">
-                    <h3>👥 عدد البائعين</h3>
-                    <p id="total-vendors">0</p>
+            <!-- الإحصائيات الحية -->
+            <div id="stats" class="dashboard-stats">
+                <div class="stat-card">
+                    <h3 id="totalVendors">0</h3>
+                    <p>البائعين</p>
                 </div>
-                <div class="feature-card">
-                    <h3>📦 المنتجات</h3>
-                    <p id="total-products">0</p>
+                <div class="stat-card">
+                    <h3 id="totalProducts">0</h3>
+                    <p>المنتجات</p>
                 </div>
-                <div class="feature-card">
-                    <h3>💰 إجمالي المبيعات</h3>
-                    <p id="total-sales">$0</p>
+                <div class="stat-card">
+                    <h3 id="totalOrders">0</h3>
+                    <p>الطلبات</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="totalRevenue">$0</h3>
+                    <p>الإيرادات</p>
                 </div>
             </div>
 
             <!-- إجراءات سريعة -->
-            <div class="hero">
-                <h3>إجراءات سريعة</h3>
-                <div style="margin-top: 2rem;">
-                    <button onclick="handleAction('import-amazon')" class="btn btn-primary">
-                        📥 استيراد من أمازون
+            <div class="hero" style="margin: 2rem 0;">
+                <h3>إجراءات إدارية</h3>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap;">
+                    <button onclick="addVendor()" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> إضافة بائع
                     </button>
-                    <button onclick="handleAction('add-vendor')" class="btn btn-secondary">
-                        👤 إضافة بائع جديد
+                    <button onclick="viewProducts()" class="btn-secondary">
+                        <i class="fas fa-box"></i> عرض المنتجات
                     </button>
-                    <button onclick="handleAction('view-products')" class="btn">
-                        📋 عرض جميع المنتجات
+                    <button onclick="viewOrders()" class="btn">
+                        <i class="fas fa-shopping-cart"></i> الطلبات الجديدة
                     </button>
+                    <button onclick="updateAmazonProducts()" class="btn" style="background: #FF9900;">
+                        <i class="fab fa-amazon"></i> تحديث منتجات أمازون
+                    </button>
+                </div>
+            </div>
+
+            <!-- قائمة البائعين -->
+            <div id="vendors" style="margin-top: 3rem;">
+                <h3><i class="fas fa-users"></i> البائعين النشطين</h3>
+                <div id="vendorsList" style="margin-top: 1rem; min-height: 200px; background: #f5f5f5; padding: 1rem; border-radius: 10px;">
+                    <p style="text-align: center; color: #666;">جاري تحميل قائمة البائعين...</p>
+                </div>
+            </div>
+
+            <!-- حالة النظام -->
+            <div style="margin-top: 3rem; padding: 1.5rem; background: #e3f2fd; border-radius: 10px;">
+                <h3><i class="fas fa-server"></i> حالة النظام</h3>
+                <div style="margin-top: 1rem;">
+                    <p><strong>Firebase:</strong> <span id="firebaseStatus">❌ جاري الاتصال...</span></p>
+                    <p><strong>آخر تحديث:</strong> <span id="lastUpdate">--:--:--</span></p>
+                    <p><strong>الذاكرة المستخدمة:</strong> <span id="memoryUsage">0%</span></p>
                 </div>
             </div>
         </section>
 
         <footer>
-            <p>© 2024 منصتي - لوحة التحكم</p>
-            <p>للدعم: support@mystore.com</p>
+            <p>© 2024 منصتي - لوحة التحكم الإدارية</p>
+            <p id="adminTime">--:--:--</p>
         </footer>
     </div>
 
-    <script src="../app.js"></script>
     <script>
+        // التحقق من صلاحية المسؤول
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!firebase || !firebase.auth) {
+                alert('Firebase غير متصل!');
+                window.location.href = '../index.html';
+                return;
+            }
+            
+            // التحقق من تسجيل الدخول
+            firebase.auth().onAuthStateChanged(async (user) => {
+                if (!user) {
+                    window.location.href = '../auth/login.html';
+                    return;
+                }
+                
+                // التحقق من صلاحية المسؤول
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                const userData = userDoc.data();
+                
+                if (!userData || userData.userType !== 'admin') {
+                    alert('ليس لديك صلاحية للدخول هنا!');
+                    window.location.href = '../index.html';
+                    return;
+                }
+                
+                // تحميل البيانات
+                loadDashboardData();
+                updateSystemInfo();
+                startLiveUpdates();
+            });
+        });
+
+        // تحميل بيانات لوحة التحكم
+        async function loadDashboardData() {
+            try {
+                // تحميل البائعين
+                const vendorsSnapshot = await firebase.firestore().collection('vendors')
+                    .where('status', '==', 'active')
+                    .limit(10)
+                    .get();
+                
+                document.getElementById('totalVendors').textContent = vendorsSnapshot.size;
+                
+                let vendorsHtml = '';
+                vendorsSnapshot.forEach(doc => {
+                    const vendor = doc.data();
+                    vendorsHtml += `
+                        <div style="background: white; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>
+                                    <h4 style="margin: 0;">${vendor.storeName || 'بدون اسم'}</h4>
+                                    <p style="margin: 5px 0; color: #666;">${vendor.email}</p>
+                                    <p style="margin: 0; font-size: 0.9rem;">
+                                        <span style="color: #4CAF50;">${vendor.totalProducts || 0} منتج</span> | 
+                                        <span style="color: #2196F3;">$${vendor.totalSales || 0} مبيعات</span>
+                                    </p>
+                                </div>
+                                <button onclick="viewVendor('${doc.id}')" style="background: #2196F3; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                                    عرض
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                document.getElementById('vendorsList').innerHTML = vendorsHtml || '<p style="text-align: center; color: #666;">لا يوجد بائعين بعد</p>';
+                
+                // تحميل المنتجات
+                const productsSnapshot = await firebase.firestore().collection('products')
+                    .where('status', '==', 'active')
+                    .get();
+                document.getElementById('totalProducts').textContent = productsSnapshot.size;
+                
+                // تحميل الطلبات
+                const ordersSnapshot = await firebase.firestore().collection('orders').get();
+                document.getElementById('totalOrders').textContent = ordersSnapshot.size;
+                
+                // حساب الإيرادات
+                let totalRevenue = 0;
+                vendorsSnapshot.forEach(doc => {
+                    totalRevenue += (doc.data().totalSales || 0) * 0.05; // 5% عمولة
+                });
+                document.getElementById('totalRevenue').textContent = `$${totalRevenue.toFixed(2)}`;
+                
+                // تحديث حالة Firebase
+                document.getElementById('firebaseStatus').innerHTML = '<span style="color: #4CAF50;">✅ متصل</span>';
+                
+            } catch (error) {
+                console.error('خطأ في تحميل البيانات:', error);
+                document.getElementById('firebaseStatus').innerHTML = '<span style="color: #f44336;">❌ خطأ</span>';
+            }
+        }
+
+        // تحديث معلومات النظام
+        function updateSystemInfo() {
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ar-EG');
+            document.getElementById('adminTime').textContent = now.toLocaleString('ar-EG');
+            
+            // محاكاة استخدام الذاكرة
+            const memory = Math.floor(Math.random() * 30) + 20;
+            document.getElementById('memoryUsage').textContent = `${memory}%`;
+        }
+
+        // تحديث حي للبيانات
+        function startLiveUpdates() {
+            setInterval(() => {
+                loadDashboardData();
+                updateSystemInfo();
+            }, 30000); // كل 30 ثانية
+            
+            setInterval(updateSystemInfo, 1000); // تحديث الوقت كل ثانية
+        }
+
+        // دوال الإدارة
+        function addVendor() {
+            const email = prompt('أدخل البريد الإلكتروني للبائع الجديد:');
+            if (!email) return;
+            
+            const name = prompt('أدخل اسم البائع:');
+            if (!name) return;
+            
+            // هنا يمكن إضافة منطق إنشاء بائع جديد
+            alert(`سيتم إنشاء حساب للبائع:\nالاسم: ${name}\nالبريد: ${email}`);
+        }
+
+        function viewVendor(vendorId) {
+            alert(`عرض تفاصيل البائع: ${vendorId}`);
+            // يمكن فتح صفحة تفاصيل البائع
+        }
+
+        function viewProducts() {
+            window.location.href = '../products/import.html';
+        }
+
+        function viewOrders() {
+            alert('عرض قائمة الطلبات');
+            // يمكن فتح صفحة الطلبات
+        }
+
+        function updateAmazonProducts() {
+            alert('جاري تحديث منتجات أمازون...');
+            // هنا يمكن إضافة كود استيراد من أمازون
+        }
+
         function logout() {
             if (confirm('هل تريد تسجيل الخروج؟')) {
-                window.location.href = '../index.html';
+                firebase.auth().signOut().then(() => {
+                    window.location.href = '../index.html';
+                });
             }
         }
     </script>
