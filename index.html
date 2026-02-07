@@ -1,2822 +1,972 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <base target="_self">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة متاجر - منصة متكاملة للتجارة الإلكترونية</title>
-    <meta name="description" content="منصة متكاملة لإنشاء متاجر إلكترونية، إدارة البائعين، ومراقبة المبيعات مع نظام عمولات">
+// =============================================
+// 🔥 تحسينات التسجيل والتوجيه التلقائي
+// =============================================
+
+let currentStoreId = null;
+let selectedAccountType = null;
+
+// دالة تسجيل الدخول المحسنة
+async function handleLogin(event) {
+    if (event) event.preventDefault();
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    if (isLoading) return false;
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const loginBtn = document.getElementById('loginBtn');
+    const loginBtnText = document.getElementById('loginBtnText');
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#3B82F6",
-                        secondary: "#10B981",
-                        accent: "#F59E0B",
-                        premium: "#8B5CF6",
-                        dark: "#1F2937",
-                        light: "#F9FAFB",
-                        seller: "#3B82F6",
-                        buyer: "#10B981",
-                        admin: "#F59E0B"
-                    },
-                    fontFamily: {
-                        'cairo': ['Cairo', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .store-card { transition: all 0.3s ease; }
-        .store-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
-        .premium-badge { background: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%); }
-        .seller-badge { background: #3B82F6; }
-        .buyer-badge { background: #10B981; }
-        .admin-badge { background: #F59E0B; }
-        .loading { animation: pulse 2s infinite; }
-        @keyframes pulse {
-            0% { opacity: 0.6; }
-            50% { opacity: 1; }
-            100% { opacity: 0.6; }
-        }
-        /* Hide sections by default */
-        main > section { display: none; }
-        #home { display: block; }
-    </style>
-</head>
-<body class="bg-gray-50 font-cairo">
-    <!-- Header Navigation -->
-    <header class="bg-white shadow-md sticky top-0 z-50">
-        <nav class="container mx-auto px-4 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2 space-x-reverse">
-                    <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                        <i class="fas fa-store text-white text-xl"></i>
-                    </div>
-                    <h1 class="text-2xl font-bold text-dark">منصة متاجر</h1>
-                </div>
-                
-                <div class="hidden md:flex items-center space-x-6 space-x-reverse">
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('home')">الرئيسية</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="showStoresIfLoggedIn()">المتاجر</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="showContentBasedOnRole()">المنتجات</a>
-                    <a href="#" class="text-dark hover:text-primary transition-colors" onclick="navigateTo('plans')">باقات الاشتراك</a>
-                </div>
-                
-                <div class="flex items-center space-x-4 space-x-reverse" id="authButtons">
-                    <button onclick="showLoginModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-sign-in-alt ml-2"></i>
-                        تسجيل الدخول
-                    </button>
-                    <button onclick="showRegisterModal()" class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                        <i class="fas fa-user-plus ml-2"></i>
-                        إنشاء حساب
-                    </button>
-                </div>
-                
-                <button class="md:hidden text-dark" onclick="toggleMobileMenu()">
-                    <i class="fas fa-bars text-2xl"></i>
-                </button>
-            </div>
-            
-            <!-- Mobile Menu -->
-            <div id="mobileMenu" class="hidden md:hidden mt-4 space-y-4">
-                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('home')">الرئيسية</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="showStoresIfLoggedIn()">المتاجر</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="showContentBasedOnRole()">المنتجات</a>
-                <a href="#" class="block text-dark hover:text-primary" onclick="navigateTo('plans')">باقات الاشتراك</a>
-            </div>
-        </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main>
-        <!-- Hero Section -->
-        <section id="home" class="gradient-bg text-white py-20">
-            <div class="container mx-auto px-4">
-                <div class="max-w-4xl mx-auto text-center">
-                    <h2 class="text-4xl md:text-5xl font-bold mb-6">أنشئ متجرك الإلكتروني في دقائق</h2>
-                    <p class="text-xl mb-8 opacity-90">منصة متكاملة تمكنك من إنشاء متجرك الخاص، استيراد منتجات من أمازون، وإدارة مبيعاتك بكل سهولة</p>
-                    <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 md:space-x-reverse">
-                        <button onclick="showRegisterModal()" class="bg-white text-primary px-8 py-3 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors">
-                            <i class="fas fa-store ml-2"></i>
-                            ابدأ مجاناً
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Features Section -->
-        <section id="features" class="py-16 bg-white">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-12">مميزات المنصة</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-store text-white text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-3">إنشاء متجر خاص</h3>
-                        <p class="text-gray-600">أنشئ متجرك الخاص بكامل المواصفات في دقائق معدودة</p>
-                    </div>
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-shopping-cart text-white text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-3">استيراد من أمازون</h3>
-                        <p class="text-gray-600">استورد منتجات مباشرة من أمازون ومنصات التسوق العالمية</p>
-                    </div>
-                    <div class="text-center p-6 rounded-xl bg-light border border-gray-200">
-                        <div class="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-4">
-                            <i class="fas fa-chart-line text-white text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold mb-3">إدارة وتحليل</h3>
-                        <p class="text-gray-600">لوحة تحكم متكاملة لمتابعة المبيعات والإحصائيات</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Stores Section -->
-        <section id="stores" class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4">
-                <div class="flex justify-between items-center mb-8">
-                    <h2 class="text-3xl font-bold text-dark">المتاجر النشطة</h2>
-                    <button onclick="showCreateStoreModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="fas fa-plus ml-2"></i>
-                        إنشاء متجر جديد
-                    </button>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="storesContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المتاجر...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Products Section -->
-        <section id="products" class="py-16 bg-white">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-8">المنتجات المتاحة</h2>
-                <div class="mb-8">
-                    <div class="flex justify-between items-center">
-                        <div class="relative w-full md:w-96">
-                            <input type="text" id="searchProducts" placeholder="ابحث عن منتج..." 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="productsContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Subscription Plans Section -->
-        <section id="plans" class="py-16 bg-gray-50">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-12">باقات الاشتراك</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <!-- Basic Plan -->
-                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                        <div class="bg-primary text-white p-6 text-center">
-                            <h3 class="text-2xl font-bold">الباقة الأساسية</h3>
-                            <div class="mt-4">
-                                <span class="text-4xl font-bold">$3</span>
-                                <span class="text-lg">/ شهر</span>
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <ul class="space-y-3 mb-8">
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>متجر واحد</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>منتجات غير محدودة</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>دعم فني عبر البريد</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>تقارير مبيعات أساسية</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-green-500 ml-2"></i>
-                                    <span>نسبة عمولة 15%</span>
-                                </li>
-                            </ul>
-                            <button onclick="subscribeToPlan('basic')" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                اختر الباقة
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Premium Plan -->
-                    <div class="bg-white rounded-xl shadow-lg border-2 border-premium overflow-hidden relative">
-                        <div class="absolute top-4 right-4">
-                            <span class="premium-badge text-white px-3 py-1 rounded-full text-sm">الأفضل</span>
-                        </div>
-                        <div class="premium-badge text-white p-6 text-center">
-                            <h3 class="text-2xl font-bold">الباقة المميزة</h3>
-                            <div class="mt-4">
-                                <span class="text-4xl font-bold">$15</span>
-                                <span class="text-lg">/ شهر</span>
-                            </div>
-                        </div>
-                        <div class="p-6">
-                            <ul class="space-y-3 mb-8">
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span class="font-semibold">5 متاجر</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>منتجات غير محدودة</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>دعم فني فوري</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>تقارير متقدمة وتحليلات</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>نسبة عمولة 10% فقط</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>نطاق مخصص (دومين)</span>
-                                </li>
-                                <li class="flex items-center">
-                                    <i class="fas fa-check text-purple-500 ml-2"></i>
-                                    <span>التسويق التلقائي</span>
-                                </li>
-                            </ul>
-                            <button onclick="subscribeToPlan('premium')" class="w-full premium-badge text-white py-3 rounded-lg hover:opacity-90 transition-colors">
-                                اختر الباقة
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main Store (Main Platform Store) -->
-        <section id="mainStore" class="py-16 bg-white">
-            <div class="container mx-auto px-4">
-                <h2 class="text-3xl font-bold text-center text-dark mb-8">متجر المنصة الرئيسي</h2>
-                <div class="mb-8">
-                    <div class="flex justify-between items-center">
-                        <div class="relative w-full md:w-96">
-                            <input type="text" id="searchMainStoreProducts" placeholder="ابحث عن منتج..." 
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg pr-10">
-                            <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="mainStoreProductsContainer">
-                    <div class="text-center py-8">
-                        <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
-                        <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-dark text-white py-12">
-        <div class="container mx-auto px-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div>
-                    <div class="flex items-center space-x-2 space-x-reverse mb-4">
-                        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                            <i class="fas fa-store text-white text-xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold">منصة متاجر</h3>
-                    </div>
-                    <p class="text-gray-400">منصة متكاملة لإنشاء وإدارة المتاجر الإلكترونية</p>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">روابط سريعة</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('home')">الرئيسية</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="showMainStoreIfLoggedIn()">متجر المنصة</a></li>
-                        <li><a href="#" class="text-gray-400 hover:text-white" onclick="navigateTo('plans')">باقات الاشتراك</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">اتصل بنا</h4>
-                    <div class="space-y-3">
-                        <div class="flex items-center space-x-2 space-x-reverse">
-                            <i class="fas fa-envelope text-gray-400"></i>
-                            <span class="text-gray-400">info@storeplatform.com</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-                <p>© 2024 منصة متاجر. جميع الحقوق محفوظة.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Modals -->
-    <!-- Login Modal -->
-    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-dark">تسجيل الدخول</h3>
-                <button onclick="closeModal('loginModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="loginForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" id="loginEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 mb-2">كلمة المرور</label>
-                    <input type="password" id="loginPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 mb-4">
-                    تسجيل الدخول
-                </button>
-                <div class="text-center">
-                    <p class="text-gray-600">أو</p>
-                    <button type="button" onclick="loginWithGoogle()" class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 mt-4">
-                        <i class="fab fa-google ml-2 text-red-500"></i>
-                        تسجيل الدخول بحساب جيميل
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Register Modal -->
-    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-dark">إنشاء حساب جديد</h3>
-                <button onclick="closeModal('registerModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="registerForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">الاسم الكامل</label>
-                    <input type="text" id="registerName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" id="registerEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">كلمة المرور</label>
-                    <input type="password" id="registerPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-gray-700 mb-2">نوع الحساب</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="accountType" value="seller" required class="ml-2">
-                            <div class="flex-1">
-                                <div class="font-semibold">بائع</div>
-                                <div class="text-sm text-gray-500">لإنشاء وإدارة متاجر</div>
-                            </div>
-                            <i class="fas fa-store text-blue-500 text-xl"></i>
-                        </label>
-                        <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="accountType" value="buyer" required class="ml-2">
-                            <div class="flex-1">
-                                <div class="font-semibold">مشتري</div>
-                                <div class="text-sm text-gray-500">لشراء المنتجات</div>
-                            </div>
-                            <i class="fas fa-shopping-cart text-green-500 text-xl"></i>
-                        </label>
-                    </div>
-                </div>
-                <div class="mb-6">
-                    <label class="flex items-center">
-                        <input type="checkbox" required class="ml-2">
-                        <span class="text-gray-700">أوافق على الشروط والأحكام</span>
-                    </label>
-                </div>
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 mb-4">
-                    إنشاء حساب
-                </button>
-                <div class="text-center">
-                    <p class="text-gray-600">أو</p>
-                    <button type="button" onclick="registerWithGoogle()" class="w-full border border-gray-300 py-3 rounded-lg hover:bg-gray-50 mt-4">
-                        <i class="fab fa-google ml-2 text-red-500"></i>
-                        التسجيل بحساب جيميل
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Account Settings Modal -->
-    <div id="accountSettingsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-md w-full p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-dark">إعدادات الحساب</h3>
-                <button onclick="closeModal('accountSettingsModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="accountSettingsForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">الاسم الكامل</label>
-                    <input type="text" id="settingsName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" id="settingsEmail" disabled class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100">
-                </div>
-                
-                <div class="mb-6">
-                    <label class="block text-gray-700 mb-2">نوع الحساب</label>
-                    <div class="grid grid-cols-2 gap-4">
-                        <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="settingsAccountType" value="seller" class="ml-2">
-                            <div class="flex-1">
-                                <div class="font-semibold">بائع</div>
-                                <div class="text-sm text-gray-500">لإنشاء وإدارة متاجر</div>
-                            </div>
-                            <i class="fas fa-store text-blue-500 text-xl"></i>
-                        </label>
-                        <label class="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-gray-50">
-                            <input type="radio" name="settingsAccountType" value="buyer" class="ml-2">
-                            <div class="flex-1">
-                                <div class="font-semibold">مشتري</div>
-                                <div class="text-sm text-gray-500">لشراء المنتجات</div>
-                            </div>
-                            <i class="fas fa-shopping-cart text-green-500 text-xl"></i>
-                        </label>
-                    </div>
-                </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 mb-2">كلمة المرور الجديدة (اختياري)</label>
-                    <input type="password" id="settingsNewPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                
-                <div class="mb-6">
-                    <label class="block text-gray-700 mb-2">تأكيد كلمة المرور</label>
-                    <input type="password" id="settingsConfirmPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                </div>
-                
-                <div class="flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="closeModal('accountSettingsModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                        إلغاء
-                    </button>
-                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                        حفظ التغييرات
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Create Store Modal -->
-    <div id="createStoreModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-2xl w-full p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-dark">إنشاء متجر جديد</h3>
-                <button onclick="closeModal('createStoreModal')" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times text-2xl"></i>
-                </button>
-            </div>
-            <form id="createStoreForm">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-gray-700 mb-2">اسم المتجر *</label>
-                        <input type="text" id="storeName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                    </div>
-                    <div>
-                        <label class="block text-gray-700 mb-2">فئة المتجر</label>
-                        <select id="storeCategory" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
-                            <option value="electronics">إلكترونيات</option>
-                            <option value="clothing">ملابس</option>
-                            <option value="home">منزلية</option>
-                            <option value="books">كتب</option>
-                            <option value="sports">رياضية</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-gray-700 mb-2">وصف المتجر</label>
-                        <textarea id="storeDescription" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"></textarea>
-                    </div>
-                </div>
-                <div class="mt-8 flex justify-end space-x-4 space-x-reverse">
-                    <button type="button" onclick="closeModal('createStoreModal')" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">إلغاء</button>
-                    <button type="submit" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                        <i class="fas fa-check ml-2"></i>
-                        إنشاء المتجر
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Store Details Modal -->
-    <div id="storeDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-bold text-dark" id="storeDetailsTitle">تفاصيل المتجر</h3>
-                    <button onclick="closeModal('storeDetailsModal')" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-                <div id="storeDetailsContent">
-                    <!-- سيتم ملؤه ديناميكياً -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Store Page (External Store) -->
-    <div id="storePageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-bold text-dark" id="storePageTitle">صفحة المتجر</h3>
-                    <button onclick="closeModal('storePageModal')" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-                <div id="storePageContent">
-                    <!-- سيتم ملؤه ديناميكياً -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Panel Modal -->
-    <div id="adminPanelModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="p-8">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-2xl font-bold text-dark">لوحة الإدارة</h3>
-                    <button onclick="closeModal('adminPanelModal')" class="text-gray-500 hover:text-gray-700">
-                        <i class="fas fa-times text-2xl"></i>
-                    </button>
-                </div>
-                <div id="adminPanelContent">
-                    <!-- سيتم ملؤه ديناميكياً -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Success Toast -->
-    <div id="successToast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
-        <div class="flex items-center">
-            <i class="fas fa-check-circle ml-2"></i>
-            <span id="toastMessage">تمت العملية بنجاح!</span>
-        </div>
-    </div>
-
-    <!-- Error Toast -->
-    <div id="errorToast" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
-        <div class="flex items-center">
-            <i class="fas fa-exclamation-circle ml-2"></i>
-            <span id="errorMessage">حدث خطأ!</span>
-        </div>
-    </div>
-
-    <script>
-        // 🔥 Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBVrMvnMoKDcP_BBa9umCXXG2T3nQcwc9Q",
-            authDomain: "my-platform-7fe2a.firebaseapp.com",
-            projectId: "my-platform-7fe2a",
-            storageBucket: "my-platform-7fe2a.firebasestorage.app",
-            messagingSenderId: "942843794284",
-            appId: "1:942843794284:web:c36e851cd04301ca985949"
-        };
-
-        // تهيئة Firebase
-        let auth, db;
-        let currentUser = null;
-        let currentUserRole = null;
-        let currentUserAccountType = null;
+    if (!email || !password) {
+        showSuccess('يرجى ملء جميع الحقول', '⚠️ انتبه');
+        return false;
+    }
+    
+    try {
+        // عرض حالة التحميل
+        isLoading = true;
+        loginBtn.disabled = true;
+        loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الدخول...';
         
+        // تسجيل الدخول
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        currentUser = userCredential.user;
+        
+        // جلب بيانات المستخدم
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            currentUserRole = userData.role || 'buyer';
+            currentUserAccountType = userData.accountType || 'buyer';
+            
+            // تحديث آخر تسجيل دخول
+            await db.collection('users').doc(currentUser.uid).update({
+                lastLogin: new Date().toISOString()
+            });
+            
+            // إظهار رسالة نجاح
+            showSuccess(
+                `أهلاً وسهلاً ${userData.name || currentUser.email.split('@')[0]}!`,
+                '🎉 تم تسجيل الدخول',
+                () => {
+                    closeModal('loginModal');
+                    updateUIAfterLogin();
+                    redirectAfterLogin();
+                }
+            );
+            
+        } else {
+            throw new Error('بيانات المستخدم غير موجودة');
+        }
+        
+    } catch (error) {
+        console.error('Login error:', error);
+        showSuccess(getFirebaseErrorMessage(error.code), '❌ خطأ في الدخول');
+    } finally {
+        // إعادة تعيين حالة التحميل
+        setTimeout(() => {
+            isLoading = false;
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'تسجيل الدخول';
+            }
+        }, 1000);
+    }
+    
+    return false;
+}
+
+// دالة التسجيل المحسنة
+async function handleRegister(event) {
+    if (event) event.preventDefault();
+    
+    if (isLoading) return false;
+    
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const terms = document.getElementById('registerTerms').checked;
+    
+    if (!name || !email || !password) {
+        showSuccess('يرجى ملء جميع الحقول', '⚠️ انتبه');
+        return false;
+    }
+    
+    if (!terms) {
+        showSuccess('يجب الموافقة على الشروط والأحكام', '⚠️ انتبه');
+        return false;
+    }
+    
+    if (password.length < 6) {
+        showSuccess('كلمة المرور يجب أن تكون 6 أحرف على الأقل', '⚠️ انتبه');
+        return false;
+    }
+    
+    try {
+        // عرض حالة التحميل
+        isLoading = true;
+        const registerBtn = document.getElementById('registerBtn');
+        const registerBtnText = document.getElementById('registerBtnText');
+        if (registerBtn && registerBtnText) {
+            registerBtn.disabled = true;
+            registerBtnText.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري إنشاء الحساب...';
+        }
+        
+        // إنشاء حساب في Firebase
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        currentUser = userCredential.user;
+        
+        // تحديث الاسم
+        await currentUser.updateProfile({ displayName: name });
+        
+        // إظهار نافذة اختيار نوع الحساب
+        closeModal('registerModal');
+        setTimeout(() => {
+            showAccountTypeModal();
+        }, 500);
+        
+    } catch (error) {
+        console.error('Register error:', error);
+        showSuccess(getFirebaseErrorMessage(error.code), '❌ خطأ في التسجيل');
+    } finally {
+        // إعادة تعيين حالة التحميل
+        setTimeout(() => {
+            isLoading = false;
+            const registerBtn = document.getElementById('registerBtn');
+            const registerBtnText = document.getElementById('registerBtnText');
+            if (registerBtn && registerBtnText) {
+                registerBtn.disabled = false;
+                registerBtnText.textContent = 'إنشاء حساب';
+            }
+        }, 1000);
+    }
+    
+    return false;
+}
+
+// دالة التسجيل عبر جوجل المحسنة
+async function loginWithGoogle() {
+    if (isLoading) return;
+    
+    try {
+        isLoading = true;
+        const provider = new firebase.auth.GoogleAuthProvider();
+        
+        showLoading('جاري الاتصال بحساب جوجل...');
+        
+        const result = await auth.signInWithPopup(provider);
+        currentUser = result.user;
+        
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        
+        if (!userDoc.exists) {
+            // إظهار نافذة اختيار نوع الحساب للمستخدم الجديد
+            closeAllModals();
+            setTimeout(() => {
+                showAccountTypeModal();
+            }, 500);
+        } else {
+            // جلب بيانات المستخدم الحالي
+            const userData = userDoc.data();
+            currentUserRole = userData.role || 'buyer';
+            currentUserAccountType = userData.accountType || 'buyer';
+            
+            // تحديث آخر تسجيل دخول
+            await db.collection('users').doc(currentUser.uid).update({
+                lastLogin: new Date().toISOString()
+            });
+            
+            showSuccess(
+                `أهلاً بعودتك ${currentUser.displayName || currentUser.email.split('@')[0]}!`,
+                '🎉 تم تسجيل الدخول',
+                () => {
+                    closeAllModals();
+                    updateUIAfterLogin();
+                    redirectAfterLogin();
+                }
+            );
+        }
+        
+    } catch (error) {
+        console.error('Google login error:', error);
+        showSuccess(getFirebaseErrorMessage(error.code), '❌ خطأ في الدخول');
+    } finally {
+        isLoading = false;
+    }
+}
+
+function registerWithGoogle() {
+    loginWithGoogle();
+}
+
+// توجيه بعد تسجيل الدخول
+function redirectAfterLogin() {
+    if (!currentUser) return;
+    
+    setTimeout(() => {
+        if (currentUserAccountType === 'seller') {
+            // تحقق إذا كان لديه متاجر
+            checkUserStores();
+        } else if (currentUserAccountType === 'buyer') {
+            // توجيه للمتجر الرئيسي
+            navigateTo('mainStore');
+            loadMainStoreProducts();
+            showSuccess(
+                'يمكنك الآن تصفح وشراء المنتجات من متجر المنصة',
+                '🛒 مرحباً بك في متجر المنصة'
+            );
+        }
+    }, 800);
+}
+
+// التحقق من متاجر المستخدم
+async function checkUserStores() {
+    try {
+        const storesSnapshot = await db.collection('stores')
+            .where('ownerId', '==', currentUser.uid)
+            .where('isActive', '==', true)
+            .get();
+        
+        if (storesSnapshot.empty) {
+            // لا يوجد متاجر، اعرض نافذة إنشاء متجر
+            setTimeout(() => {
+                showCreateStoreModal();
+                showSuccess(
+                    'ابدأ رحلتك التجارية بإنشاء متجرك الأول',
+                    '🚀 أنت الآن بائع!',
+                    null,
+                    5000
+                );
+            }, 1000);
+        } else {
+            // لديه متاجر، توجيه لقائمة المتاجر
+            navigateTo('stores');
+            loadStores();
+            showSuccess(
+                'يمكنك الآن إدارة متاجرك وإضافة منتجات جديدة',
+                '🏪 مرحباً بك في لوحة البائعين'
+            );
+        }
+    } catch (error) {
+        console.error('Error checking stores:', error);
+        navigateTo('stores');
+    }
+}
+
+// =============================================
+// 🚀 إنشاء متجر محسن
+// =============================================
+
+async function handleCreateStore(event) {
+    if (event) event.preventDefault();
+    
+    if (!currentUser) {
+        showSuccess('يجب تسجيل الدخول أولاً', '⚠️ انتبه');
+        showLoginModal();
+        return false;
+    }
+    
+    if (currentUserAccountType !== 'seller') {
+        showSuccess('هذه الميزة متاحة فقط للبائعين', '⚠️ انتبه');
+        return false;
+    }
+    
+    const storeName = document.getElementById('storeName').value;
+    const storeCategory = document.getElementById('storeCategory').value;
+    const storeDescription = document.getElementById('storeDescription').value;
+    
+    if (!storeName) {
+        showSuccess('يرجى إدخال اسم المتجر', '⚠️ انتبه');
+        return false;
+    }
+    
+    try {
+        // عرض حالة التحميل
+        const createStoreBtn = document.getElementById('createStoreBtn');
+        const createStoreBtnText = document.getElementById('createStoreBtnText');
+        if (createStoreBtn && createStoreBtnText) {
+            createStoreBtn.disabled = true;
+            createStoreBtnText.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري الإنشاء...';
+        }
+        
+        // التحقق من الباقة
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        const userData = userDoc.data();
+        
+        let maxStores = 1;
+        if (userData.plan === 'basic') maxStores = 1;
+        else if (userData.plan === 'premium') maxStores = 5;
+        
+        // حساب المتاجر الحالية
+        const storesSnapshot = await db.collection('stores')
+            .where('ownerId', '==', currentUser.uid)
+            .where('isActive', '==', true)
+            .get();
+        
+        if (storesSnapshot.size >= maxStores) {
+            showSuccess(
+                `لقد وصلت للحد الأقصى (${maxStores}) في باقاتك الحالية`,
+                '📊 ترقية الباقة',
+                () => {
+                    closeModal('createStoreModal');
+                    navigateTo('plans');
+                }
+            );
+            return false;
+        }
+        
+        // إنشاء رابط فريد للمتجر
+        const storeSlug = generateStoreSlug(storeName);
+        const storeUrl = `${window.location.origin}/store/${storeSlug}`;
+        
+        const storeData = {
+            name: storeName,
+            category: storeCategory,
+            description: storeDescription,
+            ownerId: currentUser.uid,
+            ownerName: currentUser.displayName || currentUser.email.split('@')[0],
+            ownerEmail: currentUser.email,
+            createdAt: new Date().toISOString(),
+            productsCount: 0,
+            salesCount: 0,
+            totalRevenue: 0,
+            rating: 0,
+            status: 'active',
+            storeSlug: storeSlug,
+            storeUrl: storeUrl,
+            lastUpdated: new Date().toISOString(),
+            isActive: true,
+            plan: userData.plan || 'free',
+            storeLogo: getDefaultStoreLogo(storeCategory)
+        };
+        
+        const storeRef = await db.collection('stores').add(storeData);
+        const storeId = storeRef.id;
+        
+        // تحديث المتجر بالـ ID
+        await db.collection('stores').doc(storeId).update({
+            id: storeId
+        });
+        
+        // تحديث عدد متاجر المستخدم
+        await db.collection('users').doc(currentUser.uid).update({
+            storesCount: firebase.firestore.FieldValue.increment(1)
+        });
+        
+        // حفظ سجل إنشاء المتجر
+        await db.collection('store_logs').add({
+            storeId: storeId,
+            action: 'create',
+            userId: currentUser.uid,
+            timestamp: new Date().toISOString(),
+            details: {
+                name: storeName,
+                category: storeCategory
+            }
+        });
+        
+        // إظهار رسالة النجاح
+        showSuccess(
+            `تم إنشاء متجر "${storeName}" بنجاح!`,
+            '🎉 متجر جديد',
+            () => {
+                closeModal('createStoreModal');
+                currentStoreId = storeId;
+                setTimeout(() => {
+                    showStoreDetailsModal(storeId);
+                    loadStores();
+                }, 500);
+            }
+        );
+        
+    } catch (error) {
+        console.error('Error creating store:', error);
+        showSuccess('حدث خطأ في إنشاء المتجر', '❌ خطأ');
+    } finally {
+        // إعادة تعيين حالة التحميل
+        setTimeout(() => {
+            const createStoreBtn = document.getElementById('createStoreBtn');
+            const createStoreBtnText = document.getElementById('createStoreBtnText');
+            if (createStoreBtn && createStoreBtnText) {
+                createStoreBtn.disabled = false;
+                createStoreBtnText.textContent = 'إنشاء المتجر';
+            }
+        }, 1000);
+    }
+    
+    return false;
+}
+
+// =============================================
+// 🌟 واجهة المستخدم المحسنة
+// =============================================
+
+function updateUIAfterLogin() {
+    const authButtons = document.getElementById('authButtons');
+    if (!authButtons) return;
+    
+    const userName = currentUser.displayName || currentUser.email.split('@')[0];
+    const userInitial = userName.charAt(0).toUpperCase();
+    
+    let badgeColor = '';
+    let badgeText = '';
+    let icon = '';
+    
+    if (currentUserRole === 'admin') {
+        badgeColor = 'admin-badge';
+        badgeText = 'مدير';
+        icon = 'fa-crown';
+    } else if (currentUserAccountType === 'seller') {
+        badgeColor = 'seller-badge';
+        badgeText = 'بائع';
+        icon = 'fa-store';
+    } else {
+        badgeColor = 'buyer-badge';
+        badgeText = 'مشتري';
+        icon = 'fa-shopping-cart';
+    }
+    
+    authButtons.innerHTML = `
+        <div class="flex items-center space-x-3 space-x-reverse">
+            ${currentUserRole === 'admin' ? `
+                <button onclick="showAdminPanelModal()" 
+                        class="btn-warning text-white px-6 py-2 rounded-lg font-medium hover:scale-105 transition-transform">
+                    <i class="fas fa-cogs ml-2"></i>
+                    لوحة الإدارة
+                </button>
+            ` : ''}
+            
+            ${currentUserAccountType === 'seller' ? `
+                <button onclick="showUserDashboard()" 
+                        class="btn-primary text-white px-6 py-2 rounded-lg font-medium hover:scale-105 transition-transform">
+                    <i class="fas fa-chart-line ml-2"></i>
+                    لوحة التحكم
+                </button>
+            ` : ''}
+            
+            <div class="relative group">
+                <button onclick="toggleUserMenu()" 
+                        class="flex items-center space-x-2 space-x-reverse px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                    <div class="w-8 h-8 ${badgeColor} rounded-full flex items-center justify-center text-white font-bold">
+                        ${userInitial}
+                    </div>
+                    <div class="text-right">
+                        <div class="font-medium text-dark text-sm">${userName}</div>
+                        <div class="text-xs text-gray-500">${badgeText}</div>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-500"></i>
+                </button>
+                
+                <div id="userMenu" class="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 hidden group-hover:block z-50">
+                    <div class="p-3 border-b border-gray-100">
+                        <div class="font-medium text-dark">${userName}</div>
+                        <div class="text-xs text-gray-500">${currentUser.email}</div>
+                    </div>
+                    <div class="py-1">
+                        <a href="#" onclick="showAccountSettingsModal()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                            <i class="fas fa-user-cog ml-2"></i>
+                            إعدادات الحساب
+                        </a>
+                        ${currentUserAccountType === 'seller' ? `
+                            <a href="#" onclick="showCreateStoreModal()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-plus ml-2"></i>
+                                إنشاء متجر جديد
+                            </a>
+                        ` : ''}
+                        <a href="#" onclick="logout()" class="block px-4 py-2 text-red-600 hover:bg-red-50">
+                            <i class="fas fa-sign-out-alt ml-2"></i>
+                            تسجيل الخروج
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function toggleUserMenu() {
+    const menu = document.getElementById('userMenu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+}
+
+// إغلاق القائمة عند النقر خارجها
+document.addEventListener('click', function(event) {
+    const userMenu = document.getElementById('userMenu');
+    const authButtons = document.getElementById('authButtons');
+    
+    if (userMenu && !userMenu.contains(event.target) && 
+        authButtons && !authButtons.contains(event.target)) {
+        userMenu.classList.add('hidden');
+    }
+});
+
+// =============================================
+// 📊 تحميل البيانات المحسن
+// =============================================
+
+async function loadStores() {
+    const container = document.getElementById('storesContainer');
+    if (!container) return;
+    
+    try {
+        container.innerHTML = `
+            <div class="col-span-3 text-center py-12">
+                <div class="w-16 h-16 mx-auto mb-4">
+                    <i class="fas fa-store text-4xl text-primary animate-pulse"></i>
+                </div>
+                <p class="text-gray-600">جاري تحميل المتاجر...</p>
+            </div>
+        `;
+        
+        const querySnapshot = await db.collection('stores')
+            .where('isActive', '==', true)
+            .orderBy('createdAt', 'desc')
+            .limit(12)
+            .get();
+        
+        if (querySnapshot.empty) {
+            container.innerHTML = `
+                <div class="col-span-3 text-center py-16">
+                    <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-store text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">لا توجد متاجر بعد</h3>
+                    <p class="text-gray-500 mb-6">كن أول من ينشئ متجراً على المنصة</p>
+                    ${currentUser && currentUserAccountType === 'seller' ? `
+                        <button onclick="showCreateStoreModal()" 
+                                class="btn-primary text-white px-8 py-3 rounded-xl hover:scale-105 transition-transform">
+                            <i class="fas fa-plus ml-2"></i>
+                            أنشئ أول متجر لك
+                        </button>
+                    ` : `
+                        <button onclick="showRegisterModal()" 
+                                class="btn-primary text-white px-8 py-3 rounded-xl hover:scale-105 transition-transform">
+                            <i class="fas fa-user-plus ml-2"></i>
+                            سجل الآن وأنشئ متجرك
+                        </button>
+                    `}
+                </div>
+            `;
+            return;
+        }
+        
+        let storesHTML = '';
+        querySnapshot.forEach(doc => {
+            const store = doc.data();
+            const storeId = doc.id;
+            
+            const categoryIcon = getCategoryIcon(store.category);
+            const categoryName = getCategoryName(store.category);
+            
+            storesHTML += `
+                <div class="store-card bg-white rounded-2xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2">
+                    <div class="relative">
+                        <div class="h-40 bg-gradient-to-r ${getStoreGradient(store.category)} flex items-center justify-center">
+                            <i class="fas ${categoryIcon} text-white text-5xl opacity-30"></i>
+                        </div>
+                        ${store.ownerId === currentUser?.uid ? `
+                            <div class="absolute top-3 left-3">
+                                <span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full">
+                                    متجري
+                                </span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-dark mb-1">${store.name}</h3>
+                                <div class="flex items-center text-gray-500 text-sm">
+                                    <i class="fas ${categoryIcon} ml-1"></i>
+                                    <span>${categoryName}</span>
+                                </div>
+                            </div>
+                            <span class="bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full">
+                                ${store.plan === 'premium' ? 'مميز' : 'عادي'}
+                            </span>
+                        </div>
+                        
+                        <p class="text-gray-600 mb-6 line-clamp-2">${store.description || 'متجر إلكتروني على منصة متاجر'}</p>
+                        
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-primary">${store.productsCount || 0}</div>
+                                <div class="text-xs text-gray-500">منتج</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">${store.salesCount || 0}</div>
+                                <div class="text-xs text-gray-500">مبيع</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-yellow-600">${store.rating || 0}</div>
+                                <div class="text-xs text-gray-500">تقييم</div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button onclick="showStorePage('${storeId}')" 
+                                    class="w-full btn-primary text-white py-3 rounded-xl hover:scale-105 transition-transform">
+                                <i class="fas fa-external-link-alt ml-2"></i>
+                                زيارة المتجر
+                            </button>
+                            ${currentUser && currentUser.uid === store.ownerId ? `
+                                <button onclick="showStoreDetailsModal('${storeId}')" 
+                                        class="w-full border-2 border-primary text-primary py-3 rounded-xl hover:bg-primary hover:text-white transition-colors">
+                                    <i class="fas fa-chart-bar ml-2"></i>
+                                    إدارة المتجر
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = storesHTML;
+        
+        // إضافة تأثير الظهور التدريجي
+        const cards = container.querySelectorAll('.store-card');
+        cards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.classList.add('fade-in');
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, 100);
+            }, index * 100);
+        });
+        
+    } catch (error) {
+        console.error('Error loading stores:', error);
+        container.innerHTML = `
+            <div class="col-span-3 text-center py-12">
+                <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-bold text-gray-700 mb-2">حدث خطأ</h3>
+                <p class="text-gray-500">تعذر تحميل المتاجر. حاول مرة أخرى.</p>
+                <button onclick="loadStores()" class="mt-4 text-primary hover:underline">
+                    <i class="fas fa-redo ml-1"></i> إعادة المحاولة
+                </button>
+            </div>
+        `;
+    }
+}
+
+// =============================================
+// 🎯 دوال مساعدة جديدة
+// =============================================
+
+function showLoading(message = 'جاري التحميل...') {
+    const loadingDiv = document.createElement('div');
+    loadingDiv.id = 'globalLoading';
+    loadingDiv.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center';
+    loadingDiv.innerHTML = `
+        <div class="bg-white rounded-2xl p-8 max-w-sm text-center">
+            <div class="w-16 h-16 mx-auto mb-6 relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 rounded-full animate-ping opacity-20"></div>
+                <div class="absolute inset-2 bg-gradient-to-r from-primary to-purple-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-spinner fa-spin text-white text-2xl"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-bold text-dark mb-2">${message}</h3>
+            <p class="text-gray-600">يرجى الانتظار...</p>
+        </div>
+    `;
+    document.body.appendChild(loadingDiv);
+}
+
+function hideLoading() {
+    const loading = document.getElementById('globalLoading');
+    if (loading) {
+        loading.style.opacity = '0';
+        setTimeout(() => loading.remove(), 300);
+    }
+}
+
+function getStoreGradient(category) {
+    const gradients = {
+        'electronics': 'from-blue-500 to-purple-600',
+        'clothing': 'from-green-500 to-teal-600',
+        'home': 'from-yellow-500 to-orange-600',
+        'books': 'from-red-500 to-pink-600',
+        'sports': 'from-indigo-500 to-blue-600',
+        'beauty': 'from-pink-500 to-rose-600',
+        'default': 'from-gray-500 to-gray-700'
+    };
+    return gradients[category] || gradients.default;
+}
+
+function getCategoryIcon(category) {
+    const icons = {
+        'electronics': 'fa-laptop',
+        'clothing': 'fa-tshirt',
+        'home': 'fa-home',
+        'books': 'fa-book',
+        'sports': 'fa-futbol',
+        'beauty': 'fa-spa',
+        'default': 'fa-store'
+    };
+    return icons[category] || icons.default;
+}
+
+function getDefaultStoreLogo(category) {
+    const logos = {
+        'electronics': 'https://cdn-icons-png.flaticon.com/512/3659/3659899.png',
+        'clothing': 'https://cdn-icons-png.flaticon.com/512/3144/3144456.png',
+        'home': 'https://cdn-icons-png.flaticon.com/512/2541/2541967.png',
+        'books': 'https://cdn-icons-png.flaticon.com/512/2702/2702134.png',
+        'sports': 'https://cdn-icons-png.flaticon.com/512/857/857455.png',
+        'beauty': 'https://cdn-icons-png.flaticon.com/512/1998/1998678.png'
+    };
+    return logos[category] || 'https://cdn-icons-png.flaticon.com/512/891/891419.png';
+}
+
+// =============================================
+// 🔧 تهيئة الموقع
+// =============================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    // إخفاء شاشة التحميل
+    setTimeout(() => {
+        document.getElementById('loadingOverlay').classList.add('opacity-0');
+        setTimeout(() => {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            animateCounters();
+        }, 300);
+    }, 1000);
+    
+    // تهيئة Firebase
+    if (firebase.apps.length === 0) {
         try {
             firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
-            console.log("✅ Firebase جاهز للعمل");
-        } catch (error) {
-            console.error("❌ خطأ في Firebase:", error);
-        }
-
-        // Navigation functions
-        function navigateTo(section) {
-            event.preventDefault();
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById(section).classList.remove('hidden');
-            document.getElementById('mobileMenu').classList.add('hidden');
             
-            if (section === 'mainStore' && currentUser) {
-                loadMainStoreProducts();
-            } else if (section === 'stores' && currentUser) {
-                loadStores();
-            } else if (section === 'products' && currentUser) {
-                loadProducts();
-            }
-        }
-
-        function showStoresIfLoggedIn() {
-            event.preventDefault();
-            if (!currentUser) {
-                showLoginModal();
-                showError('يجب تسجيل الدخول أولاً');
-            } else {
-                navigateTo('stores');
-            }
-        }
-
-        function showMainStoreIfLoggedIn() {
-            event.preventDefault();
-            if (!currentUser) {
-                showLoginModal();
-                showError('يجب تسجيل الدخول أولاً');
-            } else {
-                navigateTo('mainStore');
-            }
-        }
-
-        // Modal functions
-        function showLoginModal() {
-            closeAllModals();
-            document.getElementById('loginModal').classList.remove('hidden');
-            document.getElementById('loginModal').classList.add('flex');
-        }
-
-        function showRegisterModal() {
-            closeAllModals();
-            document.getElementById('registerModal').classList.remove('hidden');
-            document.getElementById('registerModal').classList.add('flex');
-        }
-
-        function showAccountSettingsModal() {
-            closeAllModals();
-            document.getElementById('accountSettingsModal').classList.remove('hidden');
-            document.getElementById('accountSettingsModal').classList.add('flex');
-            loadAccountSettings();
-        }
-
-        function showAdminPanelModal() {
-            closeAllModals();
-            document.getElementById('adminPanelModal').classList.remove('hidden');
-            document.getElementById('adminPanelModal').classList.add('flex');
-            loadAdminPanel();
-        }
-
-        function showCreateStoreModal() {
-            if (!currentUser) {
-                showLoginModal();
-                showError('يجب تسجيل الدخول أولاً');
-                return;
-            }
-            
-            if (currentUserAccountType !== 'seller') {
-                showError('هذه الميزة متاحة فقط للبائعين');
-                return;
-            }
-            
-            // التحقق من الباقة
-            checkUserPlanAndCreateStore();
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
-            document.getElementById(modalId).classList.remove('flex');
-        }
-
-        function closeAllModals() {
-            const modals = ['loginModal', 'registerModal', 'accountSettingsModal', 
-                           'createStoreModal', 'storeDetailsModal', 'storePageModal', 'adminPanelModal'];
-            modals.forEach(modalId => {
-                closeModal(modalId);
-            });
-        }
-
-        function toggleMobileMenu() {
-            document.getElementById('mobileMenu').classList.toggle('hidden');
-        }
-
-        // 🔥 Firebase Authentication Functions
-        async function login(event) {
-            if (event) event.preventDefault();
-            
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            
-            try {
-                showToast('جاري تسجيل الدخول...');
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                currentUser = userCredential.user;
-                
-                // جلب بيانات المستخدم
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    currentUserRole = userData.role || 'buyer';
-                    currentUserAccountType = userData.accountType || 'buyer';
+            // مراقبة حالة تسجيل الدخول
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    currentUser = user;
                     
-                    showToast(`مرحباً ${currentUser.displayName || currentUser.email}`, 'success');
-                    closeModal('loginModal');
-                    updateUIAfterLogin();
-                    
-                    // عرض المحتوى المناسب حسب نوع المستخدم
-                    showContentBasedOnRole();
-                } else {
-                    showError('بيانات المستخدم غير موجودة');
-                }
-                
-            } catch (error) {
-                showError(getFirebaseErrorMessage(error.code));
-            }
-        }
-
-        async function register(event) {
-            if (event) event.preventDefault();
-            
-            const name = document.getElementById('registerName').value;
-            const email = document.getElementById('registerEmail').value;
-            const password = document.getElementById('registerPassword').value;
-            const accountType = document.querySelector('input[name="accountType"]:checked').value;
-            
-            try {
-                showToast('جاري إنشاء الحساب...');
-                
-                // إنشاء حساب Firebase
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                currentUser = userCredential.user;
-                
-                // تحديث اسم العرض
-                await currentUser.updateProfile({ displayName: name });
-                
-                // تحديد دور المستخدم بناءً على نوع الحساب
-                let userRole = 'buyer';
-                if (accountType === 'seller') {
-                    userRole = 'seller';
-                }
-                
-                // حفظ بيانات المستخدم في Firestore
-                await db.collection('users').doc(currentUser.uid).set({
-                    name: name,
-                    email: email,
-                    role: userRole,
-                    accountType: accountType,
-                    plan: 'free',
-                    createdAt: new Date().toISOString(),
-                    storesCount: 0,
-                    totalSales: 0,
-                    totalPurchases: 0,
-                    subscriptionExpiry: null,
-                    maxStores: accountType === 'seller' ? 1 : 0,
-                    maxProducts: 99999,
-                    commissionRate: 0.15,
-                    emailVerified: false,
-                    isActive: true,
-                    lastLogin: new Date().toISOString()
-                });
-                
-                // حفظ سجل التسجيل
-                await db.collection('user_logs').add({
-                    userId: currentUser.uid,
-                    action: 'register',
-                    timestamp: new Date().toISOString(),
-                    details: {
-                        accountType: accountType,
-                        email: email,
-                        name: name
-                    }
-                });
-                
-                showToast(`تم إنشاء حسابك بنجاح ${name}`, 'success');
-                closeModal('registerModal');
-                
-                updateUIAfterLogin();
-                currentUserRole = userRole;
-                currentUserAccountType = accountType;
-                
-                // عرض المحتوى المناسب حسب نوع المستخدم مباشرة
-                showContentBasedOnRole();
-                
-            } catch (error) {
-                console.error('Registration error:', error);
-                showError(getFirebaseErrorMessage(error.code));
-            }
-        }
-
-        async function loginWithGoogle() {
-            try {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                showToast('جاري تسجيل الدخول...');
-                const result = await auth.signInWithPopup(provider);
-                currentUser = result.user;
-                
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                if (!userDoc.exists) {
-                    // عند التسجيل لأول مرة عبر جوجل، نسأل عن نوع الحساب باستخدام نافذة منبثقة بسيطة
-                    const accountType = prompt('اختر نوع حسابك:\n1. بائع (لإنشاء وإدارة متاجر)\n2. مشتري (لشراء المنتجات)\n\nأدخل 1 أو 2:');
-                    
-                    const finalAccountType = (accountType === '1') ? 'seller' : 'buyer';
-                    const finalRole = (finalAccountType === 'seller') ? 'seller' : 'buyer';
-                    
-                    await db.collection('users').doc(currentUser.uid).set({
-                        name: currentUser.displayName,
-                        email: currentUser.email,
-                        role: finalRole,
-                        accountType: finalAccountType,
-                        plan: 'free',
-                        createdAt: new Date().toISOString(),
-                        storesCount: 0,
-                        totalSales: 0,
-                        totalPurchases: 0,
-                        subscriptionExpiry: null,
-                        maxStores: finalAccountType === 'seller' ? 1 : 0,
-                        maxProducts: 99999,
-                        commissionRate: 0.15,
-                        emailVerified: true,
-                        isActive: true,
-                        lastLogin: new Date().toISOString(),
-                        googleAuth: true
-                    });
-                    
-                    // حفظ سجل التسجيل
-                    await db.collection('user_logs').add({
-                        userId: currentUser.uid,
-                        action: 'register_google',
-                        timestamp: new Date().toISOString(),
-                        details: {
-                            accountType: finalAccountType,
-                            email: currentUser.email,
-                            name: currentUser.displayName
-                        }
-                    });
-                    
-                    currentUserRole = finalRole;
-                    currentUserAccountType = finalAccountType;
-                } else {
-                    // جلب بيانات المستخدم
-                    const userData = userDoc.data();
-                    currentUserRole = userData.role || 'buyer';
-                    currentUserAccountType = userData.accountType || 'buyer';
-                }
-                
-                showToast(`مرحباً ${currentUser.displayName}`, 'success');
-                closeModal('loginModal');
-                updateUIAfterLogin();
-                
-                // عرض المحتوى المناسب حسب نوع المستخدم
-                showContentBasedOnRole();
-                
-            } catch (error) {
-                showError(getFirebaseErrorMessage(error.code));
-            }
-        }
-
-        function registerWithGoogle() {
-            loginWithGoogle();
-        }
-
-        async function logout() {
-            try {
-                // حفظ سجل تسجيل الخروج
-                if (currentUser) {
-                    await db.collection('user_logs').add({
-                        userId: currentUser.uid,
-                        action: 'logout',
-                        timestamp: new Date().toISOString()
-                    });
-                }
-                
-                await auth.signOut();
-                currentUser = null;
-                currentUserRole = null;
-                currentUserAccountType = null;
-                showToast('تم تسجيل الخروج', 'success');
-                updateUIAfterLogout();
-                
-                // إخفاء جميع الأقسام وإظهار الرئيسية فقط
-                showContentForGuest();
-                
-            } catch (error) {
-                showError('خطأ في تسجيل الخروج');
-            }
-        }
-
-        // 🔥 Firestore Functions
-        async function createStore(event) {
-            event.preventDefault();
-            
-            if (!currentUser) {
-                showError('يجب تسجيل الدخول أولاً');
-                showLoginModal();
-                return;
-            }
-            
-            if (currentUserAccountType !== 'seller') {
-                showError('هذه الميزة متاحة فقط للبائعين');
-                return;
-            }
-            
-            const storeName = document.getElementById('storeName').value;
-            const storeCategory = document.getElementById('storeCategory').value;
-            const storeDescription = document.getElementById('storeDescription').value;
-            
-            try {
-                showToast('جاري إنشاء المتجر...');
-                
-                // إنشاء رابط فريد للمتجر
-                const storeSlug = generateStoreSlug(storeName);
-                const storeUrl = `${window.location.origin}/store/${storeSlug}`;
-                
-                const storeData = {
-                    name: storeName,
-                    category: storeCategory,
-                    description: storeDescription,
-                    ownerId: currentUser.uid,
-                    ownerName: currentUser.displayName || currentUser.email.split('@')[0],
-                    ownerEmail: currentUser.email,
-                    createdAt: new Date().toISOString(),
-                    productsCount: 0,
-                    salesCount: 0,
-                    totalRevenue: 0,
-                    rating: 0,
-                    status: 'active',
-                    storeSlug: storeSlug,
-                    storeUrl: storeUrl,
-                    lastUpdated: new Date().toISOString(),
-                    isActive: true,
-                    plan: 'free'
-                };
-                
-                const storeRef = await db.collection('stores').add(storeData);
-                const storeId = storeRef.id;
-                
-                // تحديث المتجر بالـ ID
-                await db.collection('stores').doc(storeId).update({
-                    id: storeId
-                });
-                
-                await db.collection('users').doc(currentUser.uid).update({
-                    storesCount: firebase.firestore.FieldValue.increment(1)
-                });
-                
-                // حفظ سجل إنشاء المتجر
-                await db.collection('store_logs').add({
-                    storeId: storeId,
-                    action: 'create',
-                    userId: currentUser.uid,
-                    timestamp: new Date().toISOString(),
-                    details: {
-                        name: storeName,
-                        category: storeCategory
-                    }
-                });
-                
-                showToast('تم إنشاء المتجر بنجاح', 'success');
-                
-                // إغلاق نافذة إنشاء المتجر
-                closeModal('createStoreModal');
-                
-                // إغلاق لوحة التحكم إذا كانت مفتوحة
-                closeUserDashboard();
-                
-                // فتح تفاصيل المتجر الجديد
-                setTimeout(() => {
-                    showStoreDetailsModal(storeId);
-                }, 500);
-                
-                // تحديث قائمة المتاجر
-                loadStores();
-                
-            } catch (error) {
-                console.error('Error creating store:', error);
-                showError('خطأ في إنشاء المتجر: ' + error.message);
-            }
-        }
-
-        async function loadStores() {
-            const container = document.getElementById('storesContainer');
-            
-            try {
-                const querySnapshot = await db.collection('stores')
-                    .where('isActive', '==', true)
-                    .orderBy('createdAt', 'desc')
-                    .limit(20)
-                    .get();
-                
-                if (querySnapshot.empty) {
-                    container.innerHTML = `
-                        <div class="md:col-span-3 text-center py-12">
-                            <i class="fas fa-store text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">لا توجد متاجر نشطة</p>
-                            ${currentUser && currentUserAccountType === 'seller' ? `
-                                <button onclick="showCreateStoreModal()" class="mt-4 bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                                    أنشئ أول متجر لك
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                    return;
-                }
-                
-                let storesHTML = '';
-                querySnapshot.forEach(doc => {
-                    const store = doc.data();
-                    const storeId = doc.id;
-                    
-                    storesHTML += `
-                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                            <div class="p-6">
-                                <div class="flex justify-between items-start mb-3">
-                                    <h3 class="text-xl font-bold text-dark">${store.name || 'متجر بدون اسم'}</h3>
-                                    <span class="bg-primary text-white text-sm px-3 py-1 rounded-full">${getCategoryName(store.category)}</span>
-                                </div>
-                                <p class="text-gray-600 mb-4">${store.description || 'لا يوجد وصف'}</p>
-                                <div class="flex items-center text-gray-500 mb-4">
-                                    <i class="fas fa-user ml-2"></i>
-                                    <span>${store.ownerName || 'مالك غير معروف'}</span>
-                                </div>
-                                <div class="flex justify-between items-center mb-4">
-                                    <div class="text-center">
-                                        <div class="text-lg font-bold text-primary">${store.productsCount || 0}</div>
-                                        <div class="text-sm text-gray-500">منتج</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-lg font-bold text-secondary">${store.salesCount || 0}</div>
-                                        <div class="text-sm text-gray-500">مبيع</div>
-                                    </div>
-                                    <div class="text-center">
-                                        <div class="text-lg font-bold text-accent">${store.rating || 0}</div>
-                                        <div class="text-sm text-gray-500">تقييم</div>
-                                    </div>
-                                </div>
-                                <div class="space-y-2">
-                                    <button onclick="showStorePage('${storeId}')" 
-                                           class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors text-center">
-                                        <i class="fas fa-external-link-alt ml-2"></i>
-                                        زيارة المتجر
-                                    </button>
-                                    ${currentUser && currentUser.uid === store.ownerId ? `
-                                        <button onclick="showStoreDetailsModal('${storeId}')" 
-                                                class="w-full border border-primary text-primary py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                            <i class="fas fa-chart-bar ml-2"></i>
-                                            تفاصيل المتجر
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = storesHTML;
-            } catch (error) {
-                console.error('Error loading stores:', error);
-                container.innerHTML = `
-                    <div class="md:col-span-3 text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                        <p class="text-gray-500">حدث خطأ في تحميل المتاجر</p>
-                    </div>
-                `;
-            }
-        }
-
-        async function loadProducts() {
-            const container = document.getElementById('productsContainer');
-            
-            try {
-                const querySnapshot = await db.collection('products')
-                    .where('status', '==', 'active')
-                    .limit(12)
-                    .get();
-                
-                if (querySnapshot.empty) {
-                    container.innerHTML = `
-                        <div class="md:col-span-4 text-center py-12">
-                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">لا توجد منتجات متاحة حالياً</p>
-                            ${currentUser && currentUserAccountType === 'seller' ? `
-                                <button onclick="addSampleProducts()" class="mt-4 bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                                    إضافة منتجات تجريبية
-                                </button>
-                            ` : ''}
-                        </div>
-                    `;
-                    return;
-                }
-                
-                let productsHTML = '';
-                
-                querySnapshot.forEach(doc => {
-                    const product = doc.data();
-                    const productId = doc.id;
-                    
-                    const price = Number(product.price) || 0;
-                    const originalPrice = Number(product.originalPrice) || price * 1.2;
-                    const expectedProfit = price * 0.2;
-                    
-                    productsHTML += `
-                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج عالي الجودة'}</p>
-                                
-                                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-700">السعر:</span>
-                                        <div class="text-right">
-                                            <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                            <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span class="text-gray-700">الربح المتوقع:</span>
-                                        <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                                
-                                ${currentUser && currentUserAccountType === 'seller' ? `
-                                    <button onclick="addToStore('${productId}')" 
-                                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                        <i class="fas fa-plus ml-2"></i>
-                                        أضف لمتجري
-                                    </button>
-                                ` : `
-                                    <button onclick="showLoginModal()" 
-                                            class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                        <i class="fas fa-sign-in-alt ml-2"></i>
-                                        سجل الدخول للإضافة
-                                    </button>
-                                `}
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = productsHTML;
-            } catch (error) {
-                console.error('Error loading products:', error);
-                container.innerHTML = `
-                    <div class="md:col-span-4 text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                        <p class="text-gray-500">حدث خطأ في تحميل المنتجات</p>
-                    </div>
-                `;
-            }
-        }
-
-        async function addSampleProducts() {
-            try {
-                const sampleProducts = [
-                    {
-                        name: "سماعات لاسلكية",
-                        description: "سماعات بلوتوث عالية الجودة مع إلغاء الضوضاء",
-                        price: 49.99,
-                        originalPrice: 69.99,
-                        category: "electronics",
-                        status: "active",
-                        stock: 50,
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        name: "ساعة ذكية",
-                        description: "ساعة ذكية بتقنيات متطورة وتتبع الصحة",
-                        price: 199.99,
-                        originalPrice: 249.99,
-                        category: "electronics",
-                        status: "active",
-                        stock: 30,
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        name: "حقيبة لابتوب",
-                        description: "حقيبة مقاومة للماء للكمبيوتر المحمول",
-                        price: 29.99,
-                        originalPrice: 39.99,
-                        category: "clothing",
-                        status: "active",
-                        stock: 100,
-                        createdAt: new Date().toISOString()
-                    },
-                    {
-                        name: "ماوس لاسلكي",
-                        description: "ماوس لاسلكي دقيق وسريع الاستجابة",
-                        price: 19.99,
-                        originalPrice: 29.99,
-                        category: "electronics",
-                        status: "active",
-                        stock: 75,
-                        createdAt: new Date().toISOString()
-                    }
-                ];
-                
-                const batch = db.batch();
-                sampleProducts.forEach(product => {
-                    const docRef = db.collection('products').doc();
-                    batch.set(docRef, product);
-                });
-                
-                await batch.commit();
-                showToast('تم إضافة المنتجات التجريبية بنجاح', 'success');
-                loadProducts();
-                
-            } catch (error) {
-                console.error('Error adding sample products:', error);
-                showError('خطأ في إضافة المنتجات التجريبية');
-            }
-        }
-
-        async function addToStore(productId) {
-            if (!currentUser) {
-                showError('يجب تسجيل الدخول أولاً');
-                showLoginModal();
-                return;
-            }
-            
-            if (currentUserAccountType !== 'seller') {
-                showError('هذه الميزة متاحة فقط للبائعين');
-                return;
-            }
-            
-            try {
-                showToast('جاري إضافة المنتج للمتجر...');
-                
-                // جلب بيانات المستخدم
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const userData = userDoc.data();
-                
-                // جلب متاجر المستخدم
-                const userStores = await db.collection('stores')
-                    .where('ownerId', '==', currentUser.uid)
-                    .where('isActive', '==', true)
-                    .get();
-                
-                if (userStores.empty) {
-                    showError('ليس لديك متاجر نشطة، أنشئ متجر أولاً');
-                    showCreateStoreModal();
-                    return;
-                }
-                
-                const storeDoc = userStores.docs[0];
-                const storeId = storeDoc.id;
-                const storeData = storeDoc.data();
-                
-                // جلب بيانات المنتج
-                const productDoc = await db.collection('products').doc(productId).get();
-                
-                if (!productDoc.exists) {
-                    showError('المنتج غير موجود');
-                    return;
-                }
-                
-                const productData = productDoc.data();
-                
-                // إضافة المنتج للمتجر
-                await db.collection('store_products').add({
-                    storeId: storeId,
-                    productId: productId,
-                    productName: productData.name,
-                    productPrice: productData.price,
-                    productDescription: productData.description,
-                    addedBy: currentUser.uid,
-                    addedAt: new Date().toISOString(),
-                    status: 'active',
-                    customPrice: productData.price,
-                    profitMargin: userData.commissionRate || 0.2,
-                    expectedProfit: productData.price * (userData.commissionRate || 0.2)
-                });
-                
-                // تحديث عدد منتجات المتجر
-                await db.collection('stores').doc(storeId).update({
-                    productsCount: firebase.firestore.FieldValue.increment(1),
-                    lastUpdated: new Date().toISOString()
-                });
-                
-                showToast('تم إضافة المنتج للمتجر بنجاح!', 'success');
-                
-                const profit = productData.price * (userData.commissionRate || 0.2);
-                setTimeout(() => {
-                    showToast(`الربح المتوقع لكل بيع: $${profit.toFixed(2)}`, 'success');
-                }, 1500);
-                
-            } catch (error) {
-                console.error('Error adding product to store:', error);
-                showError('خطأ في إضافة المنتج للمتجر: ' + error.message);
-            }
-        }
-
-        async function loadMainStoreProducts() {
-            const container = document.getElementById('mainStoreProductsContainer');
-            
-            try {
-                // منتجات المتجر الرئيسي للمنصة
-                const querySnapshot = await db.collection('main_store_products')
-                    .where('status', '==', 'active')
-                    .limit(12)
-                    .get();
-                
-                if (querySnapshot.empty) {
-                    // إضافة بعض المنتجات الافتراضية للمتجر الرئيسي
-                    const defaultProducts = [
-                        {
-                            name: "لابتوب ديل XPS 13",
-                            description: "لابتوب ديل XPS 13 بشاشة لمس وبطارية تدوم طويلاً",
-                            price: 1299.99,
-                            originalPrice: 1499.99,
-                            category: "electronics",
-                            status: "active",
-                            image: "laptop.jpg",
-                            stock: 50,
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            name: "آيفون 15 برو",
-                            description: "آيفون 15 برو بكاميرا متطورة وشاشة Super Retina XDR",
-                            price: 999.99,
-                            originalPrice: 1199.99,
-                            category: "electronics",
-                            status: "active",
-                            image: "iphone.jpg",
-                            stock: 100,
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            name: "ساعة آبل واتش",
-                            description: "ساعة آبل واتش Series 8 بقياس الأكسجين في الدم",
-                            price: 399.99,
-                            originalPrice: 449.99,
-                            category: "electronics",
-                            status: "active",
-                            image: "watch.jpg",
-                            stock: 75,
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            name: "سماعات سوني WH-1000XM5",
-                            description: "سماعات سوني اللاسلكية بإلغاء الضجيج",
-                            price: 349.99,
-                            originalPrice: 399.99,
-                            category: "electronics",
-                            status: "active",
-                            image: "headphones.jpg",
-                            stock: 60,
-                            createdAt: new Date().toISOString()
-                        }
-                    ];
-                    
-                    const batch = db.batch();
-                    defaultProducts.forEach(product => {
-                        const docRef = db.collection('main_store_products').doc();
-                        batch.set(docRef, product);
-                    });
-                    
-                    await batch.commit();
-                    
-                    // إعادة تحميل المنتجات
-                    setTimeout(() => loadMainStoreProducts(), 500);
-                    return;
-                }
-                
-                let productsHTML = '';
-                
-                querySnapshot.forEach(doc => {
-                    const product = doc.data();
-                    const productId = doc.id;
-                    
-                    const price = Number(product.price) || 0;
-                    const originalPrice = Number(product.originalPrice) || price * 1.2;
-                    const discount = originalPrice > price ? 
-                        Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
-                    
-                    productsHTML += `
-                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                            <div class="p-6">
-                                ${discount > 0 ? `
-                                    <div class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                                        ${discount}% خصم
-                                    </div>
-                                ` : ''}
-                                
-                                <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج من متجر المنصة الرئيسي'}</p>
-                                
-                                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-gray-700">السعر:</span>
-                                        <div class="text-right">
-                                            <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                            ${originalPrice > price ? `
-                                                <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    <div class="flex justify-between items-center mt-3">
-                                        <span class="text-gray-700">المتوفر:</span>
-                                        <span class="text-sm ${product.stock > 10 ? 'text-green-600' : 'text-red-600'}">
-                                            ${product.stock || 0} قطعة
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                <button onclick="purchaseFromMainStore('${productId}', '${product.name}', ${price})" 
-                                        class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-shopping-cart ml-2"></i>
-                                    شراء الآن
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = productsHTML;
-            } catch (error) {
-                console.error('Error loading main store products:', error);
-                container.innerHTML = `
-                    <div class="md:col-span-4 text-center py-12">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                        <p class="text-gray-500">حدث خطأ في تحميل منتجات المتجر الرئيسي</p>
-                    </div>
-                `;
-            }
-        }
-
-        async function purchaseFromMainStore(productId, productName, price) {
-            if (!currentUser) {
-                showError('يجب تسجيل الدخول أولاً');
-                showLoginModal();
-                return;
-            }
-            
-            try {
-                // حفظ عملية الشراء من المتجر الرئيسي
-                const purchaseRef = await db.collection('main_store_purchases').add({
-                    userId: currentUser.uid,
-                    productId: productId,
-                    productName: productName,
-                    price: price,
-                    purchaseDate: new Date().toISOString(),
-                    status: 'completed',
-                    paymentMethod: 'simulated'
-                });
-                
-                // تحديث إحصائيات المستخدم
-                await db.collection('users').doc(currentUser.uid).update({
-                    totalPurchases: firebase.firestore.FieldValue.increment(1)
-                });
-                
-                // تحديث المخزون
-                const productDoc = await db.collection('main_store_products').doc(productId).get();
-                const currentStock = productDoc.data().stock || 0;
-                
-                if (currentStock > 0) {
-                    await db.collection('main_store_products').doc(productId).update({
-                        stock: firebase.firestore.FieldValue.increment(-1)
-                    });
-                }
-                
-                // حفظ سجل العملية
-                await db.collection('purchase_logs').add({
-                    purchaseId: purchaseRef.id,
-                    storeId: 'main_store',
-                    userId: currentUser.uid,
-                    productName: productName,
-                    price: price,
-                    timestamp: new Date().toISOString(),
-                    type: 'main_store'
-                });
-                
-                showToast(`تمت عملية الشراء بنجاح! ${productName} - $${price.toFixed(2)}`, 'success');
-                
-            } catch (error) {
-                console.error('Error purchasing from main store:', error);
-                showError('خطأ في عملية الشراء: ' + error.message);
-            }
-        }
-
-        async function showStoreDetailsModal(storeId) {
-            currentStoreId = storeId;
-            closeAllModals();
-            document.getElementById('storeDetailsModal').classList.remove('hidden');
-            document.getElementById('storeDetailsModal').classList.add('flex');
-            loadStoreDetails(storeId);
-        }
-
-        async function showStorePage(storeId) {
-            currentStoreId = storeId;
-            closeAllModals();
-            document.getElementById('storePageModal').classList.remove('hidden');
-            document.getElementById('storePageModal').classList.add('flex');
-            loadStorePage(storeId);
-        }
-
-        async function loadStoreDetails(storeId) {
-            const content = document.getElementById('storeDetailsContent');
-            const title = document.getElementById('storeDetailsTitle');
-            
-            try {
-                const storeDoc = await db.collection('stores').doc(storeId).get();
-                
-                if (!storeDoc.exists) {
-                    content.innerHTML = `
-                        <div class="text-center py-8">
-                            <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                            <p class="text-gray-500">المتجر غير موجود</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const store = storeDoc.data();
-                title.textContent = store.name;
-                
-                // تحميل منتجات المتجر
-                const productsSnapshot = await db.collection('store_products')
-                    .where('storeId', '==', storeId)
-                    .get();
-                
-                let productsHTML = '';
-                if (!productsSnapshot.empty) {
-                    productsSnapshot.forEach(doc => {
-                        const product = doc.data();
-                        productsHTML += `
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="py-3 px-4">${product.productName}</td>
-                                <td class="py-3 px-4">$${product.productPrice?.toFixed(2) || '0.00'}</td>
-                                <td class="py-3 px-4 text-green-600">+$${product.expectedProfit?.toFixed(2) || '0.00'}</td>
-                                <td class="py-3 px-4">
-                                    <span class="px-2 py-1 rounded text-sm ${product.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                                        ${product.status === 'active' ? 'نشط' : 'غير نشط'}
-                                    </span>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    productsHTML = `
-                        <tr>
-                            <td colspan="4" class="py-8 text-center text-gray-500">
-                                <i class="fas fa-box text-2xl mb-2"></i>
-                                <p>لا توجد منتجات في هذا المتجر بعد</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-                
-                content.innerHTML = `
-                    <div class="space-y-6">
-                        <div class="bg-gray-50 p-6 rounded-lg">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <h4 class="font-bold text-gray-700 mb-2">معلومات المتجر</h4>
-                                    <p><strong>الاسم:</strong> ${store.name}</p>
-                                    <p><strong>الفئة:</strong> ${getCategoryName(store.category)}</p>
-                                    <p><strong>الوصف:</strong> ${store.description || 'لا يوجد وصف'}</p>
-                                    <p><strong>المالك:</strong> ${store.ownerName} (${store.ownerEmail})</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-gray-700 mb-2">إحصائيات</h4>
-                                    <p><strong>عدد المنتجات:</strong> ${store.productsCount || 0}</p>
-                                    <p><strong>عدد المبيعات:</strong> ${store.salesCount || 0}</p>
-                                    <p><strong>إجمالي الإيرادات:</strong> $${store.totalRevenue?.toFixed(2) || '0.00'}</p>
-                                    <p><strong>التقييم:</strong> ${store.rating || 0} ⭐</p>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <h4 class="font-bold text-gray-700 mb-2">رابط المتجر</h4>
-                                <div class="flex items-center space-x-2 space-x-reverse">
-                                    <input type="text" value="${store.storeUrl || `${window.location.origin}/store/${storeId}`}" 
-                                           class="flex-1 px-3 py-2 border rounded-lg bg-gray-100" readonly>
-                                    <button onclick="copyStoreLink('${store.storeUrl || `${window.location.origin}/store/${storeId}`}')" 
-                                            class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h4 class="text-xl font-bold text-dark mb-4">منتجات المتجر</h4>
-                            <div class="overflow-x-auto">
-                                <table class="w-full">
-                                    <thead class="bg-gray-100">
-                                        <tr>
-                                            <th class="py-3 px-4 text-right">اسم المنتج</th>
-                                            <th class="py-3 px-4 text-right">السعر</th>
-                                            <th class="py-3 px-4 text-right">الربح المتوقع</th>
-                                            <th class="py-3 px-4 text-right">الحالة</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${productsHTML}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between pt-6 border-t">
-                            <button onclick="deleteStore('${storeId}')" 
-                                    class="bg-red-100 text-red-600 px-6 py-2 rounded-lg hover:bg-red-200 transition-colors">
-                                <i class="fas fa-trash ml-2"></i>
-                                حذف المتجر
-                            </button>
-                            <div class="space-x-2 space-x-reverse">
-                                <button onclick="showStorePage('${storeId}')"
-                                        class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                                    <i class="fas fa-external-link-alt ml-2"></i>
-                                    زيارة المتجر
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading store details:', error);
-                content.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                        <p class="text-gray-500">حدث خطأ في تحميل تفاصيل المتجر</p>
-                    </div>
-                `;
-            }
-        }
-
-        async function loadStorePage(storeId) {
-            const content = document.getElementById('storePageContent');
-            const title = document.getElementById('storePageTitle');
-            
-            try {
-                const storeDoc = await db.collection('stores').doc(storeId).get();
-                
-                if (!storeDoc.exists) {
-                    content.innerHTML = `
-                        <div class="text-center py-8">
-                            <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                            <p class="text-gray-500">المتجر غير موجود</p>
-                        </div>
-                    `;
-                    return;
-                }
-                
-                const store = storeDoc.data();
-                title.textContent = store.name;
-                
-                // تحميل منتجات المتجر للعرض في صفحة المتجر
-                const productsSnapshot = await db.collection('store_products')
-                    .where('storeId', '==', storeId)
-                    .where('status', '==', 'active')
-                    .get();
-                
-                let productsHTML = '';
-                if (!productsSnapshot.empty) {
-                    productsSnapshot.forEach(doc => {
-                        const product = doc.data();
-                        const price = product.productPrice || 0;
-                        const originalPrice = price * 1.2;
-                        
-                        productsHTML += `
-                            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                                <div class="p-6">
-                                    <h4 class="text-lg font-bold text-dark mb-2">${product.productName}</h4>
-                                    <p class="text-gray-600 text-sm mb-4">${product.productDescription || 'منتج عالي الجودة'}</p>
-                                    
-                                    <div class="mb-4">
-                                        <div class="flex items-center mb-2">
-                                            <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                            <span class="text-sm text-gray-500 line-through mr-2">$${originalPrice.toFixed(2)}</span>
-                                        </div>
-                                        <div class="text-sm text-green-600 mb-2">
-                                            <i class="fas fa-bolt ml-1"></i>
-                                            توصيل سريع
-                                        </div>
-                                    </div>
-                                    
-                                    <button onclick="simulatePurchase('${storeId}', '${product.productName}', ${price}, '${doc.id}')" 
-                                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                        <i class="fas fa-shopping-cart ml-2"></i>
-                                        شراء الآن
-                                    </button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    productsHTML = `
-                        <div class="col-span-3 text-center py-12">
-                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">لا توجد منتجات في هذا المتجر حالياً</p>
-                            <p class="text-sm text-gray-400 mt-2">سيتم إضافة المنتجات قريباً</p>
-                        </div>
-                    `;
-                }
-                
-                content.innerHTML = `
-                    <div class="space-y-8">
-                        <!-- Store Header -->
-                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-8 text-white">
-                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                                <div>
-                                    <h2 class="text-3xl font-bold mb-2">${store.name}</h2>
-                                    <p class="text-blue-100">${store.description || 'متجر إلكتروني متكامل'}</p>
-                                </div>
-                                <div class="mt-4 md:mt-0">
-                                    <div class="flex items-center space-x-2 space-x-reverse">
-                                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                                            <i class="fas fa-store text-xl"></i>
-                                        </div>
-                                        <div>
-                                            <div class="text-sm">التقييم</div>
-                                            <div class="flex">
-                                                ${Array(5).fill().map((_, i) => `
-                                                    <i class="fas fa-star ${i < Math.floor(store.rating || 0) ? 'text-yellow-300' : 'text-gray-300'} ml-1"></i>
-                                                `).join('')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Products -->
-                        <div>
-                            <h3 class="text-2xl font-bold text-dark mb-6">منتجات المتجر</h3>
-                            ${productsSnapshot.empty ? productsHTML : `
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    ${productsHTML}
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                `;
-            } catch (error) {
-                console.error('Error loading store page:', error);
-                content.innerHTML = `
-                    <div class="text-center py-8">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
-                        <p class="text-gray-500">حدث خطأ في تحميل صفحة المتجر</p>
-                        <button onclick="closeModal('storePageModal')" class="mt-4 bg-primary text-white px-6 py-2 rounded-lg">
-                            العودة
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        async function simulatePurchase(storeId, productName, price, productDocId) {
-            if (!currentUser) {
-                showError('يجب تسجيل الدخول أولاً');
-                showLoginModal();
-                return;
-            }
-            
-            try {
-                // حفظ عملية الشراء
-                const purchaseRef = await db.collection('purchases').add({
-                    userId: currentUser.uid,
-                    storeId: storeId,
-                    productName: productName,
-                    price: price,
-                    purchaseDate: new Date().toISOString(),
-                    status: 'completed',
-                    paymentMethod: 'simulated'
-                });
-                
-                // تحديث إحصائيات المتجر
-                await db.collection('stores').doc(storeId).update({
-                    salesCount: firebase.firestore.FieldValue.increment(1),
-                    totalRevenue: firebase.firestore.FieldValue.increment(price),
-                    lastUpdated: new Date().toISOString()
-                });
-                
-                // تحديث إحصائيات المستخدم المشتري
-                await db.collection('users').doc(currentUser.uid).update({
-                    totalPurchases: firebase.firestore.FieldValue.increment(1)
-                });
-                
-                // جمال مالك المتجر
-                const storeDoc = await db.collection('stores').doc(storeId).get();
-                const storeData = storeDoc.data();
-                
-                if (storeData.ownerId) {
-                    // تحديث إحصائيات مالك المتجر
-                    await db.collection('users').doc(storeData.ownerId).update({
-                        totalSales: firebase.firestore.FieldValue.increment(1)
-                    });
-                }
-                
-                // حفظ سجل العملية
-                await db.collection('purchase_logs').add({
-                    purchaseId: purchaseRef.id,
-                    storeId: storeId,
-                    userId: currentUser.uid,
-                    productName: productName,
-                    price: price,
-                    timestamp: new Date().toISOString(),
-                    ownerId: storeData.ownerId
-                });
-                
-                showToast(`تمت عملية الشراء بنجاح! ${productName} - $${price.toFixed(2)}`, 'success');
-                
-                // إغلاق صفحة المتجر بعد ثانيتين
-                setTimeout(() => {
-                    closeModal('storePageModal');
-                }, 2000);
-                
-            } catch (error) {
-                console.error('Error simulating purchase:', error);
-                showError('خطأ في عملية الشراء: ' + error.message);
-            }
-        }
-
-        async function deleteStore(storeId) {
-            if (!confirm('هل أنت متأكد من حذف هذا المتجر؟ سيتم حذف جميع المنتجات المرتبطة به.')) {
-                return;
-            }
-            
-            try {
-                showToast('جاري حذف المتجر...');
-                
-                // تحديث حالة المتجر بدلاً من حذفه
-                await db.collection('stores').doc(storeId).update({
-                    isActive: false,
-                    deletedAt: new Date().toISOString(),
-                    status: 'deleted'
-                });
-                
-                // حفظ سجل الحذف
-                await db.collection('store_logs').add({
-                    storeId: storeId,
-                    action: 'delete',
-                    userId: currentUser.uid,
-                    timestamp: new Date().toISOString()
-                });
-                
-                // تحديث عدد متاجر المستخدم
-                await db.collection('users').doc(currentUser.uid).update({
-                    storesCount: firebase.firestore.FieldValue.increment(-1)
-                });
-                
-                showToast('تم حذف المتجر بنجاح', 'success');
-                
-                // إغلاق نافذة التفاصيل
-                closeModal('storeDetailsModal');
-                
-                // إعادة تحميل المتاجر
-                setTimeout(() => {
-                    loadStores();
-                }, 500);
-                
-            } catch (error) {
-                console.error('Error deleting store:', error);
-                showError('خطأ في حذف المتجر: ' + error.message);
-            }
-        }
-
-        // Account Settings Functions
-        async function loadAccountSettings() {
-            try {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const userData = userDoc.data();
-                
-                document.getElementById('settingsName').value = userData.name || '';
-                document.getElementById('settingsEmail').value = userData.email || '';
-                
-                // تحديد نوع الحساب
-                const accountType = userData.accountType || 'buyer';
-                const radio = document.querySelector(`input[name="settingsAccountType"][value="${accountType}"]`);
-                if (radio) {
-                    radio.checked = true;
-                }
-                
-            } catch (error) {
-                console.error('Error loading account settings:', error);
-                showError('خطأ في تحميل إعدادات الحساب');
-            }
-        }
-
-        async function updateAccountSettings(event) {
-            event.preventDefault();
-            
-            try {
-                const name = document.getElementById('settingsName').value;
-                const accountType = document.querySelector('input[name="settingsAccountType"]:checked').value;
-                const newPassword = document.getElementById('settingsNewPassword').value;
-                const confirmPassword = document.getElementById('settingsConfirmPassword').value;
-                
-                // التحقق من كلمة المرور إذا تم إدخالها
-                if (newPassword && newPassword !== confirmPassword) {
-                    showError('كلمة المرور وتأكيدها غير متطابقين');
-                    return;
-                }
-                
-                showToast('جاري تحديث الحساب...');
-                
-                // تحديث اسم العرض في Firebase Auth
-                if (name !== currentUser.displayName) {
-                    await currentUser.updateProfile({ displayName: name });
-                }
-                
-                // تحديث كلمة المرور إذا تم إدخالها
-                if (newPassword) {
-                    await currentUser.updatePassword(newPassword);
-                }
-                
-                // تحديث بيانات المستخدم في Firestore
-                const updateData = {
-                    name: name,
-                    accountType: accountType,
-                    role: accountType === 'seller' ? 'seller' : 'buyer',
-                    maxStores: accountType === 'seller' ? 1 : 0,
-                    updatedAt: new Date().toISOString()
-                };
-                
-                await db.collection('users').doc(currentUser.uid).update(updateData);
-                
-                // حفظ سجل التحديث
-                await db.collection('user_logs').add({
-                    userId: currentUser.uid,
-                    action: 'update_settings',
-                    timestamp: new Date().toISOString(),
-                    details: {
-                        accountType: accountType,
-                        name: name
-                    }
-                });
-                
-                // تحديث دور المستخدم الحالي
-                currentUserRole = accountType === 'seller' ? 'seller' : 'buyer';
-                currentUserAccountType = accountType;
-                
-                showToast('تم تحديث إعدادات الحساب بنجاح', 'success');
-                closeModal('accountSettingsModal');
-                updateUIAfterLogin();
-                
-                // إعادة تحميل المحتوى حسب الدور الجديد
-                showContentBasedOnRole();
-                
-            } catch (error) {
-                console.error('Error updating account settings:', error);
-                showError('خطأ في تحديث الحساب: ' + error.message);
-            }
-        }
-
-        async function checkUserPlanAndCreateStore() {
-            try {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const userData = userDoc.data();
-                
-                // عدد المتاجر المسموح بها حسب الباقة
-                let maxStores = 0;
-                if (userData.plan === 'basic') {
-                    maxStores = 1;
-                } else if (userData.plan === 'premium') {
-                    maxStores = 5;
-                } else {
-                    maxStores = 1; // الباقة المجانية
-                }
-                
-                // حساب عدد المتاجر الحالية
-                const storesSnapshot = await db.collection('stores')
-                    .where('ownerId', '==', currentUser.uid)
-                    .where('isActive', '==', true)
-                    .get();
-                
-                if (storesSnapshot.size >= maxStores) {
-                    if (userData.plan === 'free' || userData.plan === 'basic') {
-                        showError(`لقد وصلت للحد الأقصى للمتاجر (${maxStores}) في باقاتك الحالية`);
-                        setTimeout(() => {
-                            navigateTo('plans');
-                        }, 2000);
-                    } else {
-                        showError('لقد وصلت للحد الأقصى للمتاجر في باقاتك');
-                    }
-                    return;
-                }
-                
-                // إذا كان المسموح له، نفتح نافذة إنشاء المتجر
-                closeAllModals();
-                document.getElementById('createStoreModal').classList.remove('hidden');
-                document.getElementById('createStoreModal').classList.add('flex');
-                
-            } catch (error) {
-                console.error('Error checking user plan:', error);
-                showError('خطأ في التحقق من الباقة');
-            }
-        }
-
-        // وظائف الباقات
-        async function subscribeToPlan(planType) {
-            if (!currentUser) {
-                showLoginModal();
-                showError('يجب تسجيل الدخول أولاً');
-                return;
-            }
-            
-            if (currentUserAccountType !== 'seller') {
-                showError('هذه الميزة متاحة فقط للبائعين');
-                return;
-            }
-            
-            try {
-                showToast('جاري تفعيل الباقة...');
-                
-                const planConfig = {
-                    'basic': {
-                        price: 3,
-                        maxStores: 1,
-                        maxProducts: 99999,
-                        commissionRate: 0.15,
-                        features: ['متجر واحد', 'منتجات غير محدودة', 'دعم فني عبر البريد', 'تقارير أساسية']
-                    },
-                    'premium': {
-                        price: 15,
-                        maxStores: 5,
-                        maxProducts: 99999,
-                        commissionRate: 0.10,
-                        features: ['5 متاجر', 'منتجات غير محدودة', 'دعم فني فوري', 'تقارير متقدمة', 'نطاق مخصص']
-                    }
-                };
-                
-                const plan = planConfig[planType];
-                if (!plan) {
-                    showError('الباقة غير موجودة');
-                    return;
-                }
-                
-                // حساب تاريخ انتهاء الاشتراك (30 يوم من الآن)
-                const expiryDate = new Date();
-                expiryDate.setDate(expiryDate.getDate() + 30);
-                
-                await db.collection('users').doc(currentUser.uid).update({
-                    plan: planType,
-                    maxStores: plan.maxStores,
-                    maxProducts: plan.maxProducts,
-                    commissionRate: plan.commissionRate,
-                    subscriptionExpiry: expiryDate.toISOString(),
-                    subscribedAt: new Date().toISOString()
-                });
-                
-                // حفظ سجل الاشتراك
-                await db.collection('subscription_logs').add({
-                    userId: currentUser.uid,
-                    plan: planType,
-                    price: plan.price,
-                    subscribedAt: new Date().toISOString(),
-                    expiryDate: expiryDate.toISOString()
-                });
-                
-                showToast(`تم تفعيل الباقة ${planType === 'basic' ? 'الأساسية' : 'المميزة'} بنجاح!`, 'success');
-                
-            } catch (error) {
-                console.error('Error subscribing to plan:', error);
-                showError('خطأ في تفعيل الباقة');
-            }
-        }
-
-        // Helper functions
-        function generateStoreSlug(storeName) {
-            // تحويل الاسم إلى slug
-            return storeName
-                .toLowerCase()
-                .replace(/[^a-z0-9\u0600-\u06FF\s]/g, '')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .trim()
-                + '-' + Math.random().toString(36).substr(2, 9);
-        }
-
-        function copyStoreLink(url) {
-            navigator.clipboard.writeText(url)
-                .then(() => {
-                    showToast('تم نسخ الرابط', 'success');
-                })
-                .catch(() => {
-                    showError('فشل نسخ الرابط');
-                });
-        }
-
-        function getCategoryName(category) {
-            const categories = {
-                'electronics': 'إلكترونيات',
-                'clothing': 'ملابس',
-                'home': 'منزلية',
-                'books': 'كتب',
-                'sports': 'رياضية'
-            };
-            return categories[category] || category;
-        }
-
-        function getFirebaseErrorMessage(errorCode) {
-            const messages = {
-                'auth/invalid-email': 'البريد الإلكتروني غير صالح',
-                'auth/user-disabled': 'هذا الحساب معطل',
-                'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
-                'auth/wrong-password': 'كلمة المرور غير صحيحة',
-                'auth/email-already-in-use': 'هذا البريد مسجل بالفعل',
-                'auth/weak-password': 'كلمة المرور ضعيفة جداً',
-                'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت',
-                'firestore/permission-denied': 'خطأ في الصلاحيات',
-                'auth/requires-recent-login': 'يجب إعادة تسجيل الدخول لإجراء هذه العملية'
-            };
-            return messages[errorCode] || 'حدث خطأ غير معروف: ' + errorCode;
-        }
-
-        // UI Update functions
-        function updateUIAfterLogin() {
-            const authButtons = document.getElementById('authButtons');
-            const user = auth.currentUser;
-            
-            let userBadge = '';
-            if (currentUserRole === 'admin') {
-                userBadge = '<span class="admin-badge text-white text-xs px-2 py-1 rounded-full mr-2">مدير</span>';
-            } else if (currentUserAccountType === 'seller') {
-                userBadge = '<span class="seller-badge text-white text-xs px-2 py-1 rounded-full mr-2">بائع</span>';
-            } else {
-                userBadge = '<span class="buyer-badge text-white text-xs px-2 py-1 rounded-full mr-2">مشتري</span>';
-            }
-            
-            authButtons.innerHTML = `
-                <div class="flex items-center space-x-4 space-x-reverse">
-                    ${currentUserRole === 'admin' ? `
-                        <button onclick="showAdminPanelModal()" class="bg-accent text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition-colors">
-                            <i class="fas fa-cogs ml-2"></i>
-                            لوحة الإدارة
-                        </button>
-                    ` : ''}
-                    
-                    ${currentUserAccountType === 'seller' ? `
-                        <button onclick="showUserDashboard()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                            <i class="fas fa-store ml-2"></i>
-                            متاجري
-                        </button>
-                    ` : ''}
-                    
-                    <button onclick="showAccountSettingsModal()" class="border border-gray-300 text-dark px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                        ${userBadge}
-                        <i class="fas fa-user ml-2"></i>
-                        ${user.displayName || user.email.split('@')[0]}
-                    </button>
-                    
-                    <button onclick="logout()" class="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors">
-                        <i class="fas fa-sign-out-alt ml-2"></i>
-                        تسجيل الخروج
-                    </button>
-                </div>
-            `;
-        }
-
-        function updateUIAfterLogout() {
-            const authButtons = document.getElementById('authButtons');
-            
-            authButtons.innerHTML = `
-                <button onclick="showLoginModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    <i class="fas fa-sign-in-alt ml-2"></i>
-                    تسجيل الدخول
-                </button>
-                <button onclick="showRegisterModal()" class="border border-primary text-primary px-6 py-2 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                    <i class="fas fa-user-plus ml-2"></i>
-                    إنشاء حساب
-                </button>
-            `;
-        }
-
-        function showContentForGuest() {
-            // إخفاء جميع الأقسام وإظهار الرئيسية فقط
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            document.getElementById('home').classList.remove('hidden');
-            document.getElementById('features').classList.remove('hidden');
-            
-            // إخفاء أقسام المتاجر والمنتجات من القائمة
-            updateNavForGuest();
-        }
-
-        function updateNavForGuest() {
-            const navLinks = document.querySelectorAll('nav a');
-            navLinks.forEach(link => {
-                if (link.textContent.includes('المتاجر') || link.textContent.includes('المنتجات')) {
-                    link.style.display = 'none';
-                } else {
-                    link.style.display = 'block';
-                }
-            });
-        }
-
-        function updateNavForUser() {
-            const navLinks = document.querySelectorAll('nav a');
-            navLinks.forEach(link => {
-                link.style.display = 'block';
-            });
-        }
-
-        function showContentBasedOnRole() {
-            event?.preventDefault();
-            
-            // إخفاء جميع الأقسام أولاً
-            document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
-            
-            if (!currentUser) {
-                showContentForGuest();
-                return;
-            }
-            
-            // تحديث القائمة
-            updateNavForUser();
-            
-            if (currentUserRole === 'admin') {
-                // للمدير: إظهار جميع الأقسام
-                document.getElementById('home').classList.remove('hidden');
-                document.getElementById('features').classList.remove('hidden');
-                document.getElementById('stores').classList.remove('hidden');
-                document.getElementById('products').classList.remove('hidden');
-                document.getElementById('plans').classList.remove('hidden');
-                document.getElementById('mainStore').classList.remove('hidden');
-                
-                // تحميل المحتوى
-                loadStores();
-                loadProducts();
-                loadMainStoreProducts();
-                
-            } else if (currentUserAccountType === 'seller') {
-                // للبائع: إظهار المتاجر والمنتجات والباقات
-                document.getElementById('home').classList.remove('hidden');
-                document.getElementById('features').classList.remove('hidden');
-                document.getElementById('stores').classList.remove('hidden');
-                document.getElementById('products').classList.remove('hidden');
-                document.getElementById('plans').classList.remove('hidden');
-                document.getElementById('mainStore').classList.remove('hidden');
-                
-                // تحميل المحتوى للبائع
-                loadStores();
-                loadProducts();
-                loadMainStoreProducts();
-                
-            } else if (currentUserAccountType === 'buyer') {
-                // للمشتري: إظهار متجر المنصة والباقات فقط
-                document.getElementById('home').classList.remove('hidden');
-                document.getElementById('features').classList.remove('hidden');
-                document.getElementById('plans').classList.remove('hidden');
-                document.getElementById('mainStore').classList.remove('hidden');
-                
-                // تحميل منتجات المتجر الرئيسي
-                loadMainStoreProducts();
-            }
-        }
-
-        async function showUserDashboard() {
-            if (!currentUser) {
-                showLoginModal();
-                return;
-            }
-            
-            if (currentUserAccountType !== 'seller') {
-                showError('هذه الميزة متاحة فقط للبائعين');
-                return;
-            }
-            
-            try {
-                const userDoc = await db.collection('users').doc(currentUser.uid).get();
-                const userData = userDoc.data();
-                
-                const storesSnapshot = await db.collection('stores')
-                    .where('ownerId', '==', currentUser.uid)
-                    .where('isActive', '==', true)
-                    .get();
-                
-                const userStores = [];
-                storesSnapshot.forEach(doc => {
-                    userStores.push({
-                        id: doc.id,
-                        ...doc.data()
-                    });
-                });
-                
-                const storeProducts = [];
-                for (const store of userStores) {
-                    const productsSnapshot = await db.collection('store_products')
-                        .where('storeId', '==', store.id)
-                        .get();
-                    
-                    productsSnapshot.forEach(doc => {
-                        storeProducts.push({
-                            storeId: store.id,
-                            storeName: store.name,
-                            ...doc.data()
-                        });
-                    });
-                }
-                
-                // حساب إجمالي الأرباح المتوقعة
-                const totalExpectedProfit = storeProducts.reduce((total, product) => {
-                    return total + (product.expectedProfit || 0);
-                }, 0);
-                
-                const dashboardHTML = `
-                    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                            <div class="p-8">
-                                <div class="flex justify-between items-center mb-8">
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-dark">لوحة تحكمي</h2>
-                                        <p class="text-gray-600">مرحباً ${userData.name || currentUser.email.split('@')[0]}!</p>
-                                        <div class="mt-2">
-                                            <span class="px-3 py-1 rounded-full text-sm ${userData.plan === 'premium' ? 'premium-badge text-white' : userData.plan === 'basic' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">
-                                                ${userData.plan === 'premium' ? 'باقة مميزة' : userData.plan === 'basic' ? 'باقة أساسية' : 'باقة مجانية'}
-                                            </span>
-                                            ${userData.subscriptionExpiry ? `
-                                                <span class="text-sm text-gray-500 mr-2">
-                                                    تنتهي في: ${new Date(userData.subscriptionExpiry).toLocaleDateString('ar-EG')}
-                                                </span>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                    <button onclick="closeUserDashboard()" class="text-gray-500 hover:text-gray-700">
-                                        <i class="fas fa-times text-2xl"></i>
-                                    </button>
-                                </div>
-                                
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                    <div class="bg-blue-50 p-4 rounded-xl">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center ml-3">
-                                                <i class="fas fa-store text-blue-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-gray-500 text-sm">المتاجر</p>
-                                                <p class="text-xl font-bold text-dark">${userStores.length}/${userData.maxStores || 1}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-green-50 p-4 rounded-xl">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center ml-3">
-                                                <i class="fas fa-box text-green-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-gray-500 text-sm">المنتجات</p>
-                                                <p class="text-xl font-bold text-dark">${storeProducts.length}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-yellow-50 p-4 rounded-xl">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center ml-3">
-                                                <i class="fas fa-chart-line text-yellow-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-gray-500 text-sm">المبيعات</p>
-                                                <p class="text-xl font-bold text-dark">${userData.totalSales || 0}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="bg-purple-50 p-4 rounded-xl">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center ml-3">
-                                                <i class="fas fa-money-bill text-purple-600"></i>
-                                            </div>
-                                            <div>
-                                                <p class="text-gray-500 text-sm">الأرباح المتوقعة</p>
-                                                <p class="text-xl font-bold text-dark">$${totalExpectedProfit.toFixed(2)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                ${userData.plan !== 'premium' ? `
-                                    <div class="mb-8 p-4 premium-badge rounded-lg text-white">
-                                        <div class="flex justify-between items-center">
-                                            <div>
-                                                <h3 class="font-bold text-lg">ترقية للباقة المميزة</h3>
-                                                <p class="text-sm opacity-90">احصل على 5 متاجر وأرباح أكبر</p>
-                                            </div>
-                                            <button onclick="subscribeToPlan('premium')" 
-                                                    class="bg-white text-purple-600 px-4 py-2 rounded-lg hover:bg-gray-100">
-                                                ترقية الآن بـ $15
-                                            </button>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                                
-                                <div class="mb-8">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h3 class="text-xl font-bold text-dark">متاجري</h3>
-                                        <button onclick="showCreateStoreModal()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                            <i class="fas fa-plus ml-2"></i>
-                                            إنشاء متجر جديد
-                                        </button>
-                                    </div>
-                                    
-                                    ${userStores.length > 0 ? `
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            ${userStores.map(store => `
-                                                <div class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                                    <div class="flex justify-between items-start mb-3">
-                                                        <div>
-                                                            <h4 class="font-bold text-dark text-lg">${store.name}</h4>
-                                                            <p class="text-gray-600 text-sm mt-1">${store.description || 'لا يوجد وصف'}</p>
-                                                        </div>
-                                                        <div class="flex space-x-2 space-x-reverse">
-                                                            <button onclick="showStorePage('${store.id}')" 
-                                                                    class="text-green-600 hover:text-green-800" 
-                                                                    title="زيارة المتجر">
-                                                                <i class="fas fa-external-link-alt"></i>
-                                                            </button>
-                                                            <button onclick="showStoreDetailsModal('${store.id}')" 
-                                                                    class="text-primary hover:text-blue-700" 
-                                                                    title="تفاصيل المتجر">
-                                                                <i class="fas fa-eye"></i>
-                                                            </button>
-                                                            <button onclick="deleteStore('${store.id}')" 
-                                                                    class="text-red-600 hover:text-red-800" 
-                                                                    title="حذف المتجر">
-                                                                <i class="fas fa-trash"></i>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex justify-between text-sm mb-3">
-                                                        <span class="text-gray-500">المنتجات: ${store.productsCount || 0}</span>
-                                                        <span class="text-gray-500">المبيعات: ${store.salesCount || 0}</span>
-                                                    </div>
-                                                    <div class="text-center">
-                                                        <button onclick="showStorePage('${store.id}')" 
-                                                                class="text-sm text-primary hover:underline">
-                                                            عرض صفحة المتجر
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : `
-                                        <div class="text-center py-8 bg-gray-50 rounded-lg">
-                                            <i class="fas fa-store text-4xl text-gray-300 mb-4"></i>
-                                            <p class="text-gray-500">ليس لديك متاجر بعد</p>
-                                            <button onclick="showCreateStoreModal()" class="mt-4 bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                                أنشئ متجرك الأول
-                                            </button>
-                                        </div>
-                                    `}
-                                </div>
-                                
-                                ${storeProducts.length > 0 ? `
-                                    <div>
-                                        <h3 class="text-xl font-bold text-dark mb-4">منتجاتي</h3>
-                                        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                                            <div class="overflow-x-auto">
-                                                <table class="w-full">
-                                                    <thead class="bg-gray-50">
-                                                        <tr>
-                                                            <th class="text-right py-3 px-4">المنتج</th>
-                                                            <th class="text-right py-3 px-4">المتجر</th>
-                                                            <th class="text-right py-3 px-4">السعر</th>
-                                                            <th class="text-right py-3 px-4">الربح المتوقع</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        ${storeProducts.map((product, index) => `
-                                                            <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} border-b hover:bg-gray-100">
-                                                                <td class="py-3 px-4">${product.productName || 'منتج بدون اسم'}</td>
-                                                                <td class="py-3 px-4">${product.storeName || 'متجر غير معروف'}</td>
-                                                                <td class="py-3 px-4">$${product.productPrice?.toFixed(2) || '0.00'}</td>
-                                                                <td class="py-3 px-4 text-green-600 font-bold">+$${product.expectedProfit?.toFixed(2) || '0.00'}</td>
-                                                            </tr>
-                                                        `).join('')}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                const dashboardElement = document.createElement('div');
-                dashboardElement.innerHTML = dashboardHTML;
-                dashboardElement.id = 'userDashboard';
-                document.body.appendChild(dashboardElement);
-                
-            } catch (error) {
-                console.error('Error loading user dashboard:', error);
-                showError('خطأ في تحميل لوحة التحكم: ' + error.message);
-            }
-        }
-
-        function closeUserDashboard() {
-            const dashboard = document.getElementById('userDashboard');
-            if (dashboard) {
-                dashboard.remove();
-            }
-        }
-
-        // Toast functions
-        function showToast(message, type = 'success') {
-            if (type === 'success') {
-                const toast = document.getElementById('successToast');
-                document.getElementById('toastMessage').textContent = message;
-                toast.classList.remove('hidden');
-                setTimeout(() => toast.classList.add('hidden'), 3000);
-            } else {
-                showError(message);
-            }
-        }
-
-        function showError(message) {
-            const errorToast = document.getElementById('errorToast');
-            document.getElementById('errorMessage').textContent = message;
-            errorToast.classList.remove('hidden');
-            setTimeout(() => errorToast.classList.add('hidden'), 3000);
-        }
-
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', function() {
-            // إخفاء جميع الأقسام وإظهار الرئيسية فقط
-            showContentForGuest();
-            
-            // إضافة معالجات النماذج
-            document.getElementById('loginForm').addEventListener('submit', login);
-            document.getElementById('registerForm').addEventListener('submit', register);
-            document.getElementById('createStoreForm').addEventListener('submit', createStore);
-            document.getElementById('accountSettingsForm').addEventListener('submit', updateAccountSettings);
-            
-            // البحث في المنتجات
-            document.getElementById('searchProducts')?.addEventListener('input', async function(e) {
-                const searchTerm = e.target.value.toLowerCase();
-                if (searchTerm.length < 2) {
-                    loadProducts();
-                    return;
-                }
-                
-                try {
-                    const querySnapshot = await db.collection('products')
-                        .where('status', '==', 'active')
-                        .get();
-                    
-                    const container = document.getElementById('productsContainer');
-                    let productsHTML = '';
-                    
-                    querySnapshot.forEach(doc => {
-                        const product = doc.data();
-                        const productId = doc.id;
-                        
-                        if (product.name.toLowerCase().includes(searchTerm) || 
-                            (product.description && product.description.toLowerCase().includes(searchTerm))) {
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            currentUserRole = userData.role || 'buyer';
+                            currentUserAccountType = userData.accountType || 'buyer';
                             
-                            const price = Number(product.price) || 0;
-                            const originalPrice = Number(product.originalPrice) || price * 1.2;
-                            const expectedProfit = price * 0.2;
+                            // تحديث واجهة المستخدم
+                            updateUIAfterLogin();
                             
-                            productsHTML += `
-                                <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <div class="p-6">
-                                        <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                        <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج عالي الجودة'}</p>
-                                        
-                                        <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                            <div class="flex justify-between items-center">
-                                                <span class="text-gray-700">السعر:</span>
-                                                <div class="text-right">
-                                                    <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                                    <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
-                                                </div>
-                                            </div>
-                                            <div class="flex justify-between items-center mt-3">
-                                                <span class="text-gray-700">الربح المتوقع:</span>
-                                                <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
-                                            </div>
-                                        </div>
-                                        
-                                        ${currentUser && currentUserAccountType === 'seller' ? `
-                                            <button onclick="addToStore('${productId}')" 
-                                                    class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                                <i class="fas fa-plus ml-2"></i>
-                                                أضف لمتجري
-                                            </button>
-                                        ` : `
-                                            <button onclick="showLoginModal()" 
-                                                    class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                                <i class="fas fa-sign-in-alt ml-2"></i>
-                                                سجل الدخول للإضافة
-                                            </button>
-                                        `}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-                    
-                    if (productsHTML === '') {
-                        productsHTML = `
-                            <div class="md:col-span-4 text-center py-12">
-                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500">لا توجد نتائج للبحث</p>
-                            </div>
-                        `;
-                    }
-                    
-                    container.innerHTML = productsHTML;
-                    
-                } catch (error) {
-                    console.error('Search error:', error);
-                    showError('خطأ في البحث');
-                }
-            });
-            
-            // البحث في متجر المنصة
-            document.getElementById('searchMainStoreProducts')?.addEventListener('input', async function(e) {
-                const searchTerm = e.target.value.toLowerCase();
-                if (searchTerm.length < 2) {
-                    loadMainStoreProducts();
-                    return;
-                }
-                
-                try {
-                    const querySnapshot = await db.collection('main_store_products')
-                        .where('status', '==', 'active')
-                        .get();
-                    
-                    const container = document.getElementById('mainStoreProductsContainer');
-                    let productsHTML = '';
-                    
-                    querySnapshot.forEach(doc => {
-                        const product = doc.data();
-                        const productId = doc.id;
-                        
-                        if (product.name.toLowerCase().includes(searchTerm) || 
-                            (product.description && product.description.toLowerCase().includes(searchTerm))) {
-                            
-                            const price = Number(product.price) || 0;
-                            const originalPrice = Number(product.originalPrice) || price * 1.2;
-                            const discount = originalPrice > price ? 
-                                Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
-                            
-                            productsHTML += `
-                                <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                                    <div class="p-6">
-                                        ${discount > 0 ? `
-                                            <div class="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                                                ${discount}% خصم
-                                            </div>
-                                        ` : ''}
-                                        
-                                        <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                        <p class="text-gray-600 text-sm mb-4">${product.description || 'منتج من متجر المنصة الرئيسي'}</p>
-                                        
-                                        <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                            <div class="flex justify-between items-center mb-2">
-                                                <span class="text-gray-700">السعر:</span>
-                                                <div class="text-right">
-                                                    <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
-                                                    ${originalPrice > price ? `
-                                                        <span class="text-sm text-gray-500 line-through mr-2 block">$${originalPrice.toFixed(2)}</span>
-                                                    ` : ''}
-                                                </div>
-                                            </div>
-                                            <div class="flex justify-between items-center mt-3">
-                                                <span class="text-gray-700">المتوفر:</span>
-                                                <span class="text-sm ${product.stock > 10 ? 'text-green-600' : 'text-red-600'}">
-                                                    ${product.stock || 0} قطعة
-                                                </span>
-                                            </div>
-                                        </div>
-                                        
-                                        <button onclick="purchaseFromMainStore('${productId}', '${product.name}', ${price})" 
-                                                class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors">
-                                            <i class="fas fa-shopping-cart ml-2"></i>
-                                            شراء الآن
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        }
-                    });
-                    
-                    if (productsHTML === '') {
-                        productsHTML = `
-                            <div class="md:col-span-4 text-center py-12">
-                                <i class="fas fa-search text-4xl text-gray-300 mb-4"></i>
-                                <p class="text-gray-500">لا توجد نتائج للبحث</p>
-                            </div>
-                        `;
-                    }
-                    
-                    container.innerHTML = productsHTML;
-                    
-                } catch (error) {
-                    console.error('Main store search error:', error);
-                    showError('خطأ في البحث في المتجر الرئيسي');
-                }
-            });
-            
-            // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
-            if (auth) {
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        currentUser = user;
-                        
-                        try {
-                            const userDoc = await db.collection('users').doc(user.uid).get();
-                            if (userDoc.exists) {
-                                const userData = userDoc.data();
-                                currentUserRole = userData.role || 'buyer';
-                                currentUserAccountType = userData.accountType || 'buyer';
-                                
-                                // تحديث آخر وقت تسجيل دخول
-                                await db.collection('users').doc(user.uid).update({
-                                    lastLogin: new Date().toISOString()
-                                });
-                                
-                                // حفظ سجل تسجيل الدخول
-                                await db.collection('user_logs').add({
-                                    userId: user.uid,
-                                    action: 'login',
-                                    timestamp: new Date().toISOString()
-                                });
-                                
-                                updateUIAfterLogin();
-                                showContentBasedOnRole();
-                                
-                            } else {
-                                // إذا لم توجد بيانات المستخدم، ننشئها كـ مشتري
-                                await db.collection('users').doc(user.uid).set({
-                                    name: user.displayName || user.email.split('@')[0],
-                                    email: user.email,
-                                    role: 'buyer',
-                                    accountType: 'buyer',
-                                    plan: 'free',
-                                    createdAt: new Date().toISOString(),
-                                    storesCount: 0,
-                                    totalSales: 0,
-                                    totalPurchases: 0,
-                                    subscriptionExpiry: null,
-                                    maxStores: 0,
-                                    maxProducts: 99999,
-                                    commissionRate: 0.15,
-                                    emailVerified: user.emailVerified,
-                                    isActive: true,
-                                    lastLogin: new Date().toISOString()
-                                });
-                                
-                                currentUserRole = 'buyer';
-                                currentUserAccountType = 'buyer';
-                                updateUIAfterLogin();
-                                showContentBasedOnRole();
+                            // تحميل المحتوى المناسب
+                            if (window.location.hash) {
+                                const section = window.location.hash.substring(1);
+                                if (section && document.getElementById(section)) {
+                                    navigateTo(section);
+                                }
                             }
-                        } catch (error) {
-                            console.error('Error initializing user:', error);
-                            showError('خطأ في تحميل بيانات المستخدم');
                         }
-                    } else {
-                        currentUser = null;
-                        currentUserRole = null;
-                        currentUserAccountType = null;
-                        updateUIAfterLogout();
-                        showContentForGuest();
+                    } catch (error) {
+                        console.error('Error loading user data:', error);
                     }
-                });
+                } else {
+                    currentUser = null;
+                    updateUIAfterLogout();
+                    showContentForGuest();
+                }
+            });
+            
+        } catch (error) {
+            console.error('Firebase init error:', error);
+        }
+    }
+    
+    // إضافة مستمعين للأزرار
+    setupEventListeners();
+});
+
+function setupEventListeners() {
+    // مستمعي النماذج
+    document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
+    document.getElementById('registerForm')?.addEventListener('submit', handleRegister);
+    document.getElementById('createStoreForm')?.addEventListener('submit', handleCreateStore);
+    
+    // البحث
+    const searchProducts = document.getElementById('searchProducts');
+    if (searchProducts) {
+        searchProducts.addEventListener('keyup', debounce(function(e) {
+            if (e.target.value.length > 1) {
+                searchProductsFunction(e.target.value);
+            } else if (e.target.value.length === 0) {
+                loadProducts();
+            }
+        }, 300));
+    }
+    
+    // إغلاق القوائم بالنقر خارجها
+    document.addEventListener('click', function(event) {
+        // إغلاق القائمة المتنقلة
+        const mobileMenu = document.getElementById('mobileMenu');
+        const mobileMenuBtn = document.querySelector('button[onclick="toggleMobileMenu()"]');
+        if (mobileMenu && !mobileMenu.contains(event.target) && 
+            mobileMenuBtn && !mobileMenuBtn.contains(event.target)) {
+            mobileMenu.classList.add('hidden');
+        }
+        
+        // إغلاق قائمة المستخدم
+        const userMenu = document.getElementById('userMenu');
+        if (userMenu && !event.target.closest('.group')) {
+            userMenu.classList.add('hidden');
+        }
+    });
+    
+    // إضافة تأثيرات للعناصر عند الظهور
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in');
             }
         });
-    </script>
-</body>
-</html>
+    }, { threshold: 0.1 });
+    
+    // مراقبة جميع البطاقات
+    document.querySelectorAll('.store-card, .feature-card').forEach(card => {
+        observer.observe(card);
+    });
+}
+
+// دالة Debounce لتحسين الأداء
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// =============================================
+// 🎨 تحسينات العرض
+// =============================================
+
+function showContentForGuest() {
+    // إظهار الأقسام الأساسية فقط
+    document.querySelectorAll('main > section').forEach(section => {
+        section.classList.remove('active');
+        section.style.display = 'none';
+    });
+    
+    // إظهار الأقسام الأساسية
+    const basicSections = ['home', 'features', 'plans'];
+    basicSections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.style.display = 'block';
+            setTimeout(() => section.classList.add('active'), 50);
+        }
+    });
+}
+
+function showContentBasedOnRole() {
+    if (!currentUser) {
+        showContentForGuest();
+        return;
+    }
+    
+    // إخفاء جميع الأقسام أولاً
+    document.querySelectorAll('main > section').forEach(section => {
+        section.classList.remove('active');
+        section.style.display = 'none';
+    });
+    
+    // الأقسام المشتركة للجميع
+    const commonSections = ['home', 'features', 'plans'];
+    
+    // أقسام حسب نوع المستخدم
+    if (currentUserAccountType === 'seller') {
+        commonSections.push('stores', 'products', 'mainStore');
+    } else if (currentUserAccountType === 'buyer') {
+        commonSections.push('mainStore', 'products');
+    }
+    
+    // إظهار الأقسام المحددة
+    commonSections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (section) {
+            section.style.display = 'block';
+            setTimeout(() => section.classList.add('active'), 50);
+        }
+    });
+    
+    // تحميل المحتوى
+    if (currentUserAccountType === 'seller') {
+        loadStores();
+        loadProducts();
+    }
+    loadMainStoreProducts();
+}
+
+// =============================================
+// 🚨 معالجة الأخطاء
+// =============================================
+
+function getFirebaseErrorMessage(errorCode) {
+    const messages = {
+        'auth/invalid-email': 'البريد الإلكتروني غير صالح',
+        'auth/user-disabled': 'هذا الحساب معطل',
+        'auth/user-not-found': 'لا يوجد حساب بهذا البريد',
+        'auth/wrong-password': 'كلمة المرور غير صحيحة',
+        'auth/email-already-in-use': 'هذا البريد مسجل بالفعل',
+        'auth/weak-password': 'كلمة المرور ضعيفة جداً',
+        'auth/network-request-failed': 'خطأ في الاتصال بالإنترنت',
+        'firestore/permission-denied': 'خطأ في الصلاحيات',
+        'auth/requires-recent-login': 'يجب إعادة تسجيل الدخول',
+        'auth/popup-closed-by-user': 'تم إغلاق النافذة من قبل المستخدم',
+        'auth/cancelled-popup-request': 'تم إلغاء عملية الدخول',
+        'auth/popup-blocked': 'تم حظر النافذة المنبثقة. يرجى السماح بالنوافذ المنبثقة',
+        'default': 'حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى'
+    };
+    return messages[errorCode] || messages.default;
+}
+
+// =============================================
+// 🎬 الرسوم المتحركة
+// =============================================
+
+// إضافة أنماط CSS للرسوم المتحركة
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .animate-fade-in {
+        animation: fadeIn 0.6s ease-out forwards;
+    }
+    
+    .line-clamp-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    
+    .scale-enter {
+        transform: scale(0.95);
+        opacity: 0;
+    }
+    
+    .scale-enter-active {
+        transform: scale(1);
+        opacity: 1;
+        transition: all 0.3s ease;
+    }
+`;
+document.head.appendChild(style);
