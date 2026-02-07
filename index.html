@@ -61,7 +61,6 @@
                 </div>
                 
                 <div class="flex items-center space-x-4 space-x-reverse" id="authButtons">
-                    <!-- سيتم تحديث هذا القسم تلقائياً -->
                     <button onclick="showLoginModal()" class="bg-primary text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="fas fa-sign-in-alt ml-2"></i>
                         تسجيل الدخول
@@ -145,7 +144,6 @@
                     </button>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="storesContainer">
-                    <!-- سيتم تحميل المتاجر من Firebase هنا -->
                     <div class="text-center py-8">
                         <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                         <p class="mt-2 text-gray-600">جاري تحميل المتاجر...</p>
@@ -168,7 +166,6 @@
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="productsContainer">
-                    <!-- سيتم تحميل المنتجات من Firebase هنا -->
                     <div class="text-center py-8">
                         <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
                         <p class="mt-2 text-gray-600">جاري تحميل المنتجات...</p>
@@ -228,11 +225,11 @@
             <form id="loginForm">
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <div class="mb-6">
                     <label class="block text-gray-700 mb-2">كلمة المرور</label>
-                    <input type="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 mb-4">
                     تسجيل الدخول
@@ -260,15 +257,15 @@
             <form id="registerForm">
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">الاسم الكامل</label>
-                    <input type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <input type="text" id="registerName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <div class="mb-4">
                     <label class="block text-gray-700 mb-2">البريد الإلكتروني</label>
-                    <input type="email" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <input type="email" id="registerEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <div class="mb-6">
                     <label class="block text-gray-700 mb-2">كلمة المرور</label>
-                    <input type="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <input type="password" id="registerPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
                 </div>
                 <div class="mb-6">
                     <label class="flex items-center">
@@ -348,7 +345,7 @@
     </div>
 
     <script>
-        // 🔥 Firebase Configuration - استخدم بياناتك هنا
+        // 🔥 Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBVrMvnMoKDcP_BBa9umCXXG2T3nQcwc9Q",
             authDomain: "my-platform-7fe2a.firebaseapp.com",
@@ -395,6 +392,7 @@
         function showCreateStoreModal() {
             if (!currentUser) {
                 showLoginModal();
+                showError('يجب تسجيل الدخول أولاً');
                 return;
             }
             closeAllModals();
@@ -422,8 +420,8 @@
         async function login(event) {
             event.preventDefault();
             
-            const email = event.target.querySelector('input[type="email"]').value;
-            const password = event.target.querySelector('input[type="password"]').value;
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
             
             try {
                 showToast('جاري تسجيل الدخول...');
@@ -432,6 +430,8 @@
                 showToast(`مرحباً ${currentUser.email}`, 'success');
                 closeModal('loginModal');
                 updateUIAfterLogin();
+                loadStores();
+                loadProducts();
             } catch (error) {
                 showError(getFirebaseErrorMessage(error.code));
             }
@@ -440,24 +440,22 @@
         async function register(event) {
             event.preventDefault();
             
-            const name = event.target.querySelector('input[type="text"]').value;
-            const email = event.target.querySelector('input[type="email"]').value;
-            const password = event.target.querySelector('input[type="password"]').value;
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
             
             try {
                 showToast('جاري إنشاء الحساب...');
                 const userCredential = await auth.createUserWithEmailAndPassword(email, password);
                 currentUser = userCredential.user;
                 
-                // تحديث اسم المستخدم
                 await currentUser.updateProfile({ displayName: name });
                 
-                // حفظ بيانات إضافية في Firestore
                 await db.collection('users').doc(currentUser.uid).set({
                     name: name,
                     email: email,
                     role: 'seller',
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdAt: new Date().toISOString(),
                     storesCount: 0,
                     totalSales: 0
                 });
@@ -465,6 +463,8 @@
                 showToast(`مرحباً ${name}، تم إنشاء حسابك`, 'success');
                 closeModal('registerModal');
                 updateUIAfterLogin();
+                loadStores();
+                loadProducts();
             } catch (error) {
                 showError(getFirebaseErrorMessage(error.code));
             }
@@ -477,14 +477,13 @@
                 const result = await auth.signInWithPopup(provider);
                 currentUser = result.user;
                 
-                // التحقق إذا كان المستخدم جديداً
                 const userDoc = await db.collection('users').doc(currentUser.uid).get();
                 if (!userDoc.exists) {
                     await db.collection('users').doc(currentUser.uid).set({
                         name: currentUser.displayName,
                         email: currentUser.email,
                         role: 'seller',
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        createdAt: new Date().toISOString(),
                         storesCount: 0,
                         totalSales: 0
                     });
@@ -493,6 +492,8 @@
                 showToast(`مرحباً ${currentUser.displayName}`, 'success');
                 closeModal('loginModal');
                 updateUIAfterLogin();
+                loadStores();
+                loadProducts();
             } catch (error) {
                 showError(getFirebaseErrorMessage(error.code));
             }
@@ -508,6 +509,8 @@
                 currentUser = null;
                 showToast('تم تسجيل الخروج', 'success');
                 updateUIAfterLogout();
+                loadStores();
+                loadProducts();
             } catch (error) {
                 showError('خطأ في تسجيل الخروج');
             }
@@ -519,6 +522,7 @@
             
             if (!currentUser) {
                 showError('يجب تسجيل الدخول أولاً');
+                showLoginModal();
                 return;
             }
             
@@ -534,8 +538,8 @@
                     category: storeCategory,
                     description: storeDescription,
                     ownerId: currentUser.uid,
-                    ownerName: currentUser.displayName || currentUser.email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    ownerName: currentUser.displayName || currentUser.email.split('@')[0],
+                    createdAt: new Date().toISOString(),
                     productsCount: 0,
                     salesCount: 0,
                     rating: 0,
@@ -544,7 +548,6 @@
                 
                 await db.collection('stores').add(storeData);
                 
-                // تحديث عدد متاجر المستخدم
                 await db.collection('users').doc(currentUser.uid).update({
                     storesCount: firebase.firestore.FieldValue.increment(1)
                 });
@@ -553,7 +556,8 @@
                 closeModal('createStoreModal');
                 loadStores();
             } catch (error) {
-                showError('خطأ في إنشاء المتجر');
+                console.error('Error creating store:', error);
+                showError('خطأ في إنشاء المتجر: ' + error.message);
             }
         }
 
@@ -561,10 +565,7 @@
             const container = document.getElementById('storesContainer');
             
             try {
-                const querySnapshot = await db.collection('stores')
-                    .where('status', '==', 'active')
-                    .orderBy('createdAt', 'desc')
-                    .get();
+                const querySnapshot = await db.collection('stores').get();
                 
                 if (querySnapshot.empty) {
                     container.innerHTML = `
@@ -585,13 +586,13 @@
                         <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
                             <div class="p-6">
                                 <div class="flex justify-between items-start mb-3">
-                                    <h3 class="text-xl font-bold text-dark">${store.name}</h3>
+                                    <h3 class="text-xl font-bold text-dark">${store.name || 'متجر بدون اسم'}</h3>
                                     <span class="bg-primary text-white text-sm px-3 py-1 rounded-full">${getCategoryName(store.category)}</span>
                                 </div>
                                 <p class="text-gray-600 mb-4">${store.description || 'لا يوجد وصف'}</p>
                                 <div class="flex items-center text-gray-500 mb-4">
                                     <i class="fas fa-user ml-2"></i>
-                                    <span>${store.ownerName}</span>
+                                    <span>${store.ownerName || 'مالك غير معروف'}</span>
                                 </div>
                                 <div class="flex justify-between items-center mb-4">
                                     <div class="text-center">
@@ -619,7 +620,12 @@
                 container.innerHTML = storesHTML;
             } catch (error) {
                 console.error('Error loading stores:', error);
-                showError('خطأ في تحميل المتاجر');
+                container.innerHTML = `
+                    <div class="md:col-span-3 text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                        <p class="text-gray-500">حدث خطأ في تحميل المتاجر</p>
+                    </div>
+                `;
             }
         }
 
@@ -627,82 +633,139 @@
             const container = document.getElementById('productsContainer');
             
             try {
-                const querySnapshot = await db.collection('products')
-                    .where('status', '==', 'active')
-                    .orderBy('createdAt', 'desc')
-                    .limit(20)
-                    .get();
+                const querySnapshot = await db.collection('products').get();
                 
                 if (querySnapshot.empty) {
-                    container.innerHTML = `
-                        <div class="md:col-span-4 text-center py-12">
-                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
-                            <p class="text-gray-500">لا توجد منتجات بعد</p>
-                        </div>
-                    `;
+                    const defaultProducts = [
+                        {
+                            name: "سماعات لاسلكية",
+                            description: "سماعات بلوتوث عالية الجودة",
+                            price: 49.99,
+                            originalPrice: 69.99,
+                            status: "active",
+                            category: "electronics",
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            name: "ساعة ذكية",
+                            description: "ساعة ذكية بتقنيات متطورة",
+                            price: 199.99,
+                            originalPrice: 249.99,
+                            status: "active",
+                            category: "electronics",
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            name: "حقيبة لابتوب",
+                            description: "حقيبة مقاومة للماء للكمبيوتر المحمول",
+                            price: 29.99,
+                            originalPrice: 39.99,
+                            status: "active",
+                            category: "fashion",
+                            createdAt: new Date().toISOString()
+                        },
+                        {
+                            name: "ماوس لاسلكي",
+                            description: "ماوس لاسلكي دقيق",
+                            price: 19.99,
+                            originalPrice: 29.99,
+                            status: "active",
+                            category: "electronics",
+                            createdAt: new Date().toISOString()
+                        }
+                    ];
+                    
+                    for (const product of defaultProducts) {
+                        await db.collection('products').add(product);
+                    }
+                    
+                    setTimeout(loadProducts, 500);
                     return;
                 }
                 
                 let productsHTML = '';
+                let productCount = 0;
+                
                 querySnapshot.forEach(doc => {
                     const product = doc.data();
                     const productId = doc.id;
-                    const expectedProfit = product.price * 0.2;
                     
-                    productsHTML += `
-                        <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
-                            <div class="p-6">
-                                <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
-                                <p class="text-gray-600 text-sm mb-4">${product.description || 'لا يوجد وصف'}</p>
-                                
-                                <div class="mb-4 p-3 bg-blue-50 rounded-lg">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="text-gray-700">السعر:</span>
-                                        <span class="text-2xl font-bold text-primary">$${product.price}</span>
-                                    </div>
-                                    ${product.originalPrice ? `
+                    if (product.status !== 'inactive') {
+                        const price = Number(product.price) || 0;
+                        const originalPrice = Number(product.originalPrice) || 0;
+                        const expectedProfit = price * 0.2;
+                        
+                        productsHTML += `
+                            <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
+                                <div class="p-6">
+                                    <h3 class="text-xl font-bold text-dark mb-2">${product.name}</h3>
+                                    <p class="text-gray-600 text-sm mb-4">${product.description || 'لا يوجد وصف'}</p>
+                                    
+                                    <div class="mb-4 p-3 bg-blue-50 rounded-lg">
                                         <div class="flex justify-between items-center mb-2">
-                                            <span class="text-gray-700">السعر الأصلي:</span>
-                                            <span class="text-lg text-gray-500 line-through">$${product.originalPrice}</span>
+                                            <span class="text-gray-700">السعر:</span>
+                                            <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
                                         </div>
-                                    ` : ''}
-                                    <div class="flex justify-between items-center">
-                                        <span class="text-gray-700">الربح المتوقع:</span>
-                                        <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
+                                        ${originalPrice > price ? `
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-gray-700">السعر الأصلي:</span>
+                                                <span class="text-lg text-gray-500 line-through">$${originalPrice.toFixed(2)}</span>
+                                            </div>
+                                        ` : ''}
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-gray-700">الربح المتوقع:</span>
+                                            <span class="text-lg font-bold text-green-600">+$${expectedProfit.toFixed(2)}</span>
+                                        </div>
                                     </div>
+                                    
+                                    ${currentUser ? `
+                                        <button onclick="addToStore('${productId}')" 
+                                                class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mb-2">
+                                            <i class="fas fa-plus ml-2"></i>
+                                            أضف لمتجري
+                                        </button>
+                                        <div class="text-center text-sm text-gray-500">
+                                            ربحك: $${expectedProfit.toFixed(2)} لكل بيع
+                                        </div>
+                                    ` : `
+                                        <button onclick="showLoginModal()" 
+                                                class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
+                                            <i class="fas fa-sign-in-alt ml-2"></i>
+                                            سجل الدخول للإضافة
+                                        </button>
+                                    `}
                                 </div>
-                                
-                                ${currentUser ? `
-                                    <button onclick="addToStore('${productId}')" 
-                                            class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors mb-2">
-                                        <i class="fas fa-plus ml-2"></i>
-                                        أضف لمتجري
-                                    </button>
-                                    <div class="text-center text-sm text-gray-500">
-                                        ربحك: $${expectedProfit.toFixed(2)} لكل بيع
-                                    </div>
-                                ` : `
-                                    <button onclick="showLoginModal()" 
-                                            class="w-full border border-primary text-primary py-3 rounded-lg hover:bg-primary hover:text-white transition-colors">
-                                        <i class="fas fa-sign-in-alt ml-2"></i>
-                                        سجل الدخول للإضافة
-                                    </button>
-                                `}
                             </div>
+                        `;
+                        productCount++;
+                    }
+                });
+                
+                if (productCount === 0) {
+                    productsHTML = `
+                        <div class="md:col-span-4 text-center py-12">
+                            <i class="fas fa-box text-4xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500">لا توجد منتجات نشطة</p>
                         </div>
                     `;
-                });
+                }
                 
                 container.innerHTML = productsHTML;
             } catch (error) {
                 console.error('Error loading products:', error);
-                showError('خطأ في تحميل المنتجات');
+                container.innerHTML = `
+                    <div class="md:col-span-4 text-center py-12">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-300 mb-4"></i>
+                        <p class="text-gray-500">حدث خطأ في تحميل المنتجات</p>
+                    </div>
+                `;
             }
         }
 
         async function addToStore(productId) {
             if (!currentUser) {
                 showError('يجب تسجيل الدخول أولاً');
+                showLoginModal();
                 return;
             }
             
@@ -715,6 +778,7 @@
                 
                 if (userStores.empty) {
                     showError('ليس لديك متاجر، أنشئ متجر أولاً');
+                    showCreateStoreModal();
                     return;
                 }
                 
@@ -737,7 +801,7 @@
                     productName: productData.name,
                     productPrice: productData.price,
                     addedBy: currentUser.uid,
-                    addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    addedAt: new Date().toISOString(),
                     status: 'active',
                     customPrice: productData.price,
                     profitMargin: 0.2,
@@ -752,12 +816,53 @@
                 
                 const profit = productData.price * 0.2;
                 setTimeout(() => {
-                    showToast(`الربح المتوقع لكل بيع: $${profit.toFixed(2)}`, 'info');
+                    showToast(`الربح المتوقع لكل بيع: $${profit.toFixed(2)}`, 'success');
                 }, 1500);
                 
             } catch (error) {
                 console.error('Error adding product to store:', error);
                 showError('خطأ في إضافة المنتج للمتجر');
+            }
+        }
+
+        async function deleteStore(storeId) {
+            if (!confirm('هل أنت متأكد من حذف هذا المتجر؟ سيتم حذف جميع المنتجات المرتبطة به.')) {
+                return;
+            }
+            
+            try {
+                showToast('جاري حذف المتجر...');
+                
+                const storeProductsSnapshot = await db.collection('store_products')
+                    .where('storeId', '==', storeId)
+                    .get();
+                
+                const batch = db.batch();
+                storeProductsSnapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                
+                const storeRef = db.collection('stores').doc(storeId);
+                batch.delete(storeRef);
+                
+                await batch.commit();
+                
+                await db.collection('users').doc(currentUser.uid).update({
+                    storesCount: firebase.firestore.FieldValue.increment(-1)
+                });
+                
+                showToast('تم حذف المتجر بنجاح', 'success');
+                
+                closeUserDashboard();
+                
+                setTimeout(() => {
+                    loadStores();
+                    showUserDashboard();
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error deleting store:', error);
+                showError('خطأ في حذف المتجر');
             }
         }
 
@@ -807,9 +912,6 @@
                     </button>
                 </div>
             `;
-            
-            loadStores();
-            loadProducts();
         }
 
         function updateUIAfterLogout() {
@@ -825,9 +927,6 @@
                     إنشاء حساب
                 </button>
             `;
-            
-            loadStores();
-            loadProducts();
         }
 
         async function showUserDashboard() {
@@ -874,7 +973,7 @@
                                 <div class="flex justify-between items-center mb-8">
                                     <div>
                                         <h2 class="text-2xl font-bold text-dark">لوحة تحكمي</h2>
-                                        <p class="text-gray-600">مرحباً ${userData.name}!</p>
+                                        <p class="text-gray-600">مرحباً ${userData.name || currentUser.email.split('@')[0]}!</p>
                                     </div>
                                     <button onclick="closeUserDashboard()" class="text-gray-500 hover:text-gray-700">
                                         <i class="fas fa-times text-2xl"></i>
@@ -932,16 +1031,25 @@
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             ${userStores.map(store => `
                                                 <div class="bg-white border border-gray-200 rounded-lg p-4">
-                                                    <div class="flex justify-between items-start">
-                                                        <h4 class="font-bold text-dark">${store.name}</h4>
+                                                    <div class="flex justify-between items-start mb-3">
+                                                        <div>
+                                                            <h4 class="font-bold text-dark text-lg">${store.name}</h4>
+                                                            <p class="text-gray-600 text-sm mt-1">${store.description || 'لا يوجد وصف'}</p>
+                                                        </div>
+                                                        <div class="flex space-x-2 space-x-reverse">
+                                                            <button onclick="deleteStore('${store.id}')" class="text-red-600 hover:text-red-800" title="حذف المتجر">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex justify-between text-sm mb-3">
+                                                        <span class="text-gray-500">المنتجات: ${store.productsCount || 0}</span>
+                                                        <span class="text-gray-500">المبيعات: ${store.salesCount || 0}</span>
+                                                    </div>
+                                                    <div class="text-center">
                                                         <span class="text-sm px-2 py-1 rounded ${store.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
                                                             ${store.status === 'active' ? 'نشط' : 'غير نشط'}
                                                         </span>
-                                                    </div>
-                                                    <p class="text-gray-600 text-sm mt-2 mb-4">${store.description || 'لا يوجد وصف'}</p>
-                                                    <div class="flex justify-between text-sm">
-                                                        <span class="text-gray-500">المنتجات: ${store.productsCount || 0}</span>
-                                                        <span class="text-gray-500">المبيعات: ${store.salesCount || 0}</span>
                                                     </div>
                                                 </div>
                                             `).join('')}
@@ -973,10 +1081,10 @@
                                                 <tbody>
                                                     ${storeProducts.map((product, index) => `
                                                         <tr class="${index % 2 === 0 ? 'bg-gray-50' : 'bg-white'} border-b">
-                                                            <td class="py-3 px-4">${product.productName}</td>
-                                                            <td class="py-3 px-4">${product.storeName}</td>
-                                                            <td class="py-3 px-4">$${product.productPrice}</td>
-                                                            <td class="py-3 px-4 text-green-600 font-bold">+$${(product.productPrice * 0.2).toFixed(2)}</td>
+                                                            <td class="py-3 px-4">${product.productName || 'منتج بدون اسم'}</td>
+                                                            <td class="py-3 px-4">${product.storeName || 'متجر غير معروف'}</td>
+                                                            <td class="py-3 px-4">$${product.productPrice || 0}</td>
+                                                            <td class="py-3 px-4 text-green-600 font-bold">+$${((product.productPrice || 0) * 0.2).toFixed(2)}</td>
                                                         </tr>
                                                     `).join('')}
                                                 </tbody>
@@ -1003,16 +1111,14 @@
         function closeUserDashboard() {
             const dashboard = document.getElementById('userDashboard');
             if (dashboard) {
-                document.body.removeChild(dashboard);
+                dashboard.remove();
             }
         }
 
         // Toast functions
-        function showToast(message, type = 'info') {
-            const toast = document.getElementById('successToast');
-            const errorToast = document.getElementById('errorToast');
-            
+        function showToast(message, type = 'success') {
             if (type === 'success') {
+                const toast = document.getElementById('successToast');
                 document.getElementById('toastMessage').textContent = message;
                 toast.classList.remove('hidden');
                 setTimeout(() => toast.classList.add('hidden'), 3000);
@@ -1030,7 +1136,6 @@
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            // مراقبة حالة تسجيل الدخول
             if (auth) {
                 auth.onAuthStateChanged(async (user) => {
                     if (user) {
@@ -1042,7 +1147,7 @@
                                 name: user.displayName || user.email.split('@')[0],
                                 email: user.email,
                                 role: 'seller',
-                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                createdAt: new Date().toISOString(),
                                 storesCount: 0,
                                 totalSales: 0
                             });
@@ -1053,14 +1158,15 @@
                         currentUser = null;
                         updateUIAfterLogout();
                     }
+                    
+                    loadStores();
+                    loadProducts();
                 });
             }
             
-            // تحميل البيانات الأولية
             loadStores();
             loadProducts();
             
-            // إعداد البحث
             document.getElementById('searchProducts').addEventListener('input', async function(e) {
                 const searchTerm = e.target.value.toLowerCase();
                 if (searchTerm.length < 2) {
@@ -1069,9 +1175,7 @@
                 }
                 
                 try {
-                    const querySnapshot = await db.collection('products')
-                        .where('status', '==', 'active')
-                        .get();
+                    const querySnapshot = await db.collection('products').get();
                     
                     const container = document.getElementById('productsContainer');
                     let productsHTML = '';
@@ -1083,7 +1187,8 @@
                         if (product.name.toLowerCase().includes(searchTerm) || 
                             (product.description && product.description.toLowerCase().includes(searchTerm))) {
                             
-                            const expectedProfit = product.price * 0.2;
+                            const price = Number(product.price) || 0;
+                            const expectedProfit = price * 0.2;
                             
                             productsHTML += `
                                 <div class="store-card bg-white rounded-xl shadow-lg overflow-hidden">
@@ -1094,7 +1199,7 @@
                                         <div class="mb-4 p-3 bg-blue-50 rounded-lg">
                                             <div class="flex justify-between items-center">
                                                 <span class="text-gray-700">السعر:</span>
-                                                <span class="text-2xl font-bold text-primary">$${product.price}</span>
+                                                <span class="text-2xl font-bold text-primary">$${price.toFixed(2)}</span>
                                             </div>
                                             <div class="flex justify-between items-center mt-2">
                                                 <span class="text-gray-700">الربح المتوقع:</span>
@@ -1137,7 +1242,6 @@
                 }
             });
             
-            // تفعيل النماذج
             document.getElementById('loginForm').addEventListener('submit', login);
             document.getElementById('registerForm').addEventListener('submit', register);
             document.getElementById('createStoreForm').addEventListener('submit', createStore);
