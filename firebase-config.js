@@ -1,316 +1,489 @@
 // ============================================
-// Firebase Configuration - SIMPLE & WORKING
+// SMART FIREBASE DETECTOR - يعمل مع موقعين
 // ============================================
 
-// بيانات مشروع my-marketplace-64afa
-const firebaseConfig = {
-  apiKey: "AIzaSyBKNo5VBqNNEW0NffIop_Ufett-HOAQKkE",
-  authDomain: "my-marketplace-64afa.firebaseapp.com",
-  projectId: "my-marketplace-64afa",
-  storageBucket: "my-marketplace-64afa.firebasestorage.app",
-  messagingSenderId: "607733189687",
-  appId: "1:607733189687:web:1566e5a81ec3d71ed603b2"
+// ============================================
+// 1. معرفة أي موقع نحن فيه
+// ============================================
+const currentURL = window.location.href;
+const currentHost = window.location.hostname;
+const currentPath = window.location.pathname;
+
+console.log('🔍 اكتشاف الموقع الحالي...');
+console.log('🌐 الرابط:', currentURL);
+console.log('🏠 الدومين:', currentHost);
+console.log('📁 المسار:', currentPath);
+
+// ============================================
+// 2. قاعدة بيانات المشاريع
+// ============================================
+const FIREBASE_PROJECTS = {
+    // المشروع الأول: my-marketplace-64afa
+    'MARKETPLACE': {
+        name: 'منصتي - متاجر متعددة',
+        id: 'my-marketplace-64afa',
+        config: {
+            apiKey: "AIzaSyBKNo5VBqNNEW0NffIop_Ufett-HOAQKkE",
+            authDomain: "my-marketplace-64afa.firebaseapp.com",
+            projectId: "my-marketplace-64afa",
+            storageBucket: "my-marketplace-64afa.firebasestorage.app",
+            messagingSenderId: "607733189687",
+            appId: "1:607733189687:web:1566e5a81ec3d71ed603b2"
+        },
+        // المواقع التي تستخدم هذا المشروع
+        domains: [
+            'ashraf-dev11.github.io/my-marketplace',
+            'localhost/my-marketplace',
+            '127.0.0.1/my-marketplace'
+        ]
+    },
+    
+    // المشروع الثاني: fittnes-web
+    'FITNESS': {
+        name: 'موقع اللياقة البدنية',
+        id: 'fittnes-web',
+        config: {
+            apiKey: "AIzaSyA7POxxSjiEHElUMEoQ90TTlBs2WBEE18g",
+            authDomain: "fittnes-web.firebaseapp.com",
+            projectId: "fittnes-web",
+            storageBucket: "fittnes-web.firebasestorage.app",
+            messagingSenderId: "1043684216161",
+            appId: "1:1043684216161:web:7ffa29e8c215bcc480c920",
+            measurementId: "G-8BQBEPH5Z8"
+        },
+        // المواقع التي تستخدم هذا المشروع
+        domains: [
+            'ashraf-dev11.github.io/fitness-project', // ⬅️ ضع الرابط الصحيح هنا
+            'localhost/fitness-project',
+            '127.0.0.1/fitness-project'
+        ]
+    }
 };
 
 // ============================================
-// المتغيرات الأساسية
+// 3. اكتشاف المشروع المناسب تلقائياً
 // ============================================
-let isFirebaseInitialized = false;
-let initializationAttempts = 0;
+function detectFirebaseProject() {
+    // البحث في كل مشروع
+    for (const [key, project] of Object.entries(FIREBASE_PROJECTS)) {
+        for (const domain of project.domains) {
+            // إذا كان الرابط الحالي يحتوي على أي من النطاقات
+            if (currentURL.includes(domain)) {
+                console.log(`✅ تم اكتشاف: ${project.name}`);
+                console.log(`📊 Project ID: ${project.id}`);
+                return project;
+            }
+        }
+    }
+    
+    // إذا كان في my-marketplace
+    if (currentPath.includes('/my-marketplace') || currentPath === '/my-marketplace/') {
+        console.log('✅ اكتشاف تلقائي: موقع my-marketplace');
+        return FIREBASE_PROJECTS.MARKETPLACE;
+    }
+    
+    // إذا كان في مشروع اللياقة (غير موجود بعد)
+    console.log('⚠️ لم يتم التعرف على المشروع، استخدام الافتراضي (my-marketplace)');
+    return FIREBASE_PROJECTS.MARKETPLACE;
+}
 
 // ============================================
-// 1. الدالة الرئيسية لتهيئة Firebase
+// 4. تحديد المشروع الحالي
 // ============================================
-function initializeFirebaseSimple() {
-    initializationAttempts++;
-    console.log(`🔄 محاولة تهيئة Firebase #${initializationAttempts}`);
+const currentProject = detectFirebaseProject();
+const firebaseConfig = currentProject.config;
+
+console.log('🎯 المشروع المختار:', currentProject.name);
+console.log('🔑 API Key:', firebaseConfig.apiKey.substring(0, 15) + '...');
+
+// ============================================
+// 5. تهيئة Firebase الذكية
+// ============================================
+window.firebaseState = {
+    ready: false,
+    project: currentProject.id,
+    error: null
+};
+
+function smartFirebaseInit() {
+    console.log(`🚀 بدء تهيئة Firebase لـ ${currentProject.name}...`);
     
-    // التحقق من وجود Firebase SDK
+    // التحقق من Firebase SDK
     if (typeof firebase === 'undefined') {
-        console.error('❌ خطأ: Firebase SDK غير محمل!');
-        
-        // إظهار رسالة خطأ واضحة
-        document.body.insertAdjacentHTML('beforeend', `
-            <div style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: #f44336;
-                color: white;
-                padding: 15px;
-                text-align: center;
-                font-weight: bold;
-                z-index: 9999;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            ">
-                ❌ Firebase SDK غير محمل! تأكد من اتصال الإنترنت
-                <button onclick="location.reload()" style="
-                    background: white;
-                    color: #f44336;
-                    border: none;
-                    padding: 5px 15px;
-                    margin-right: 10px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                ">
-                    🔄 إعادة تحميل
-                </button>
-            </div>
-        `);
-        
+        const errorMsg = 'Firebase SDK غير محمل! تحقق من اتصال الإنترنت';
+        console.error('❌', errorMsg);
+        showFirebaseStatus('error', errorMsg);
+        window.firebaseState.error = errorMsg;
         return false;
     }
     
     try {
-        // التحقق من التهيئة السابقة
-        if (firebase.apps.length > 0) {
-            console.log('✅ Firebase مثبت بالفعل');
-            isFirebaseInitialized = true;
-            return true;
+        // البحث عن أي تطبيق Firebase مثبت بالفعل
+        const existingApps = firebase.apps;
+        
+        // إذا كان هناك تطبيق مثبت بالفعل
+        if (existingApps.length > 0) {
+            const existingApp = existingApps[0];
+            const existingProjectId = existingApp.options.projectId;
+            
+            // إذا كان التطبيق الحالي مختلف عن المطلوب
+            if (existingProjectId !== firebaseConfig.projectId) {
+                console.warn(`⚠️ تطبيق مختلف موجود: ${existingProjectId}`);
+                console.log(`🔄 حذف التطبيق القديم...`);
+                
+                // حذف التطبيق القديم
+                existingApp.delete();
+                console.log('✅ تم حذف التطبيق القديم');
+            } else {
+                console.log('✅ Firebase مثبت بالفعل بالبيانات الصحيحة');
+                window.firebaseApp = existingApp;
+                window.firebaseState.ready = true;
+                showFirebaseStatus('success', `${currentProject.name} - متصل`);
+                return true;
+            }
         }
         
-        // التهيئة الأولى
-        console.log('🚀 جاري تهيئة Firebase لأول مرة...');
-        firebase.initializeApp(firebaseConfig);
+        // التهيئة الجديدة
+        console.log('🔧 جاري تهيئة Firebase...');
+        window.firebaseApp = firebase.initializeApp(firebaseConfig, currentProject.id);
         
-        // تعيين الخدمات
-        window.fbAuth = firebase.auth();
-        window.fbDb = firebase.firestore();
-        window.fbStorage = firebase.storage();
+        // تهيئة الخدمات
+        window.auth = firebase.auth();
+        window.db = firebase.firestore();
+        window.storage = firebase.storage();
         
-        isFirebaseInitialized = true;
-        console.log('🎉 تم تهيئة Firebase بنجاح!');
-        console.log('📊 Project ID:', firebase.app().options.projectId);
+        // تحديث الحالة
+        window.firebaseState.ready = true;
+        window.firebaseState.error = null;
         
-        // إظهار رسالة نجاح
-        showSuccessMessage();
+        console.log('🎉 Firebase مهيأ بنجاح!');
+        console.log('📦 Project:', window.firebaseApp.options.projectId);
+        
+        // إظهار رسالة النجاح
+        showFirebaseStatus('success', `${currentProject.name} - يعمل الآن`);
+        
+        // إعداد المستمعين
+        setupFirebaseListeners();
         
         return true;
         
     } catch (error) {
         console.error('❌ خطأ في تهيئة Firebase:', error);
         
-        // عرض تفاصيل الخطأ
-        document.body.insertAdjacentHTML('beforeend', `
-            <div style="
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                background: #ff9800;
-                color: white;
-                padding: 15px;
-                border-radius: 8px;
-                max-width: 300px;
-                z-index: 9999;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            ">
-                <strong>⚠️ تحذير Firebase:</strong><br>
-                ${error.message.substring(0, 100)}...
-                <br><br>
-                <small>Project: ${firebaseConfig.projectId}</small>
-            </div>
-        `);
+        let errorMessage = error.message;
+        if (error.code === 'app/duplicate-app') {
+            errorMessage = 'Firebase مثبت بالفعل من قبل';
+        } else if (error.message.includes('invalid-api-key')) {
+            errorMessage = 'API Key غير صحيح للمشروع الحالي';
+        }
         
+        showFirebaseStatus('error', errorMessage);
+        window.firebaseState.error = errorMessage;
         return false;
     }
 }
 
 // ============================================
-// 2. إظهار رسالة النجاح
+// 6. إعداد المستمعين
 // ============================================
-function showSuccessMessage() {
-    const successDiv = document.createElement('div');
-    successDiv.id = 'firebase-success';
-    successDiv.style.cssText = `
+function setupFirebaseListeners() {
+    if (!window.auth) return;
+    
+    // مراقبة حالة المصادقة
+    window.auth.onAuthStateChanged((user) => {
+        if (user) {
+            console.log('👤 مستخدم مسجل:', user.email);
+            updateUIForUser(user);
+        } else {
+            console.log('👤 لا يوجد مستخدم مسجل');
+            updateUIForVisitor();
+        }
+    });
+}
+
+// ============================================
+// 7. وظائف الواجهة
+// ============================================
+function updateUIForUser(user) {
+    // يمكنك تحديث واجهة المستخدم هنا
+    console.log('🔄 تحديث واجهة للمستخدم:', user.email);
+}
+
+function updateUIForVisitor() {
+    // واجهة للزوار
+    console.log('🔄 تحديث واجهة للزوار');
+}
+
+// ============================================
+// 8. عرض حالة Firebase
+// ============================================
+function showFirebaseStatus(type, message) {
+    // إزالة أي رسالة سابقة
+    const oldMessages = document.querySelectorAll('.firebase-status-message');
+    oldMessages.forEach(msg => msg.remove());
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'firebase-status-message';
+    messageDiv.style.cssText = `
         position: fixed;
         top: 10px;
         right: 10px;
-        background: #4CAF50;
+        padding: 15px 25px;
+        border-radius: 10px;
         color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
         font-weight: bold;
-        z-index: 9998;
-        box-shadow: 0 3px 15px rgba(76, 175, 80, 0.3);
-        animation: slideIn 0.5s ease;
+        z-index: 10000;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        animation: statusSlideIn 0.5s ease;
         display: flex;
         align-items: center;
-        gap: 10px;
-        border: 2px solid rgba(255,255,255,0.3);
+        gap: 12px;
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255,255,255,0.1);
     `;
     
-    successDiv.innerHTML = `
-        <div style="font-size: 20px;">✅</div>
-        <div>
-            <div>Firebase متصل!</div>
-            <div style="font-size: 12px; opacity: 0.9;">my-marketplace-64afa</div>
-        </div>
-    `;
+    if (type === 'success') {
+        messageDiv.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+        messageDiv.innerHTML = `
+            <i class="fas fa-check-circle" style="font-size: 24px;"></i>
+            <div>
+                <div style="font-size: 16px; font-weight: bold;">✅ ${message}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 3px;">${currentProject.id}</div>
+            </div>
+        `;
+    } else {
+        messageDiv.style.background = 'linear-gradient(135deg, #f44336, #c62828)';
+        messageDiv.innerHTML = `
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px;"></i>
+            <div>
+                <div style="font-size: 16px; font-weight: bold;">❌ ${message}</div>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 3px;">${currentProject.id}</div>
+            </div>
+        `;
+    }
     
-    document.body.appendChild(successDiv);
+    document.body.appendChild(messageDiv);
     
-    // إخفاء بعد 4 ثواني
+    // إضافة أنماط CSS إذا لم تكن موجودة
+    if (!document.getElementById('firebase-animations')) {
+        const style = document.createElement('style');
+        style.id = 'firebase-animations';
+        style.textContent = `
+            @keyframes statusSlideIn {
+                from { transform: translateX(100px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes statusSlideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // إخفاء الرسالة بعد 5 ثواني
     setTimeout(() => {
-        successDiv.style.opacity = '0';
-        successDiv.style.transition = 'opacity 1s';
-        setTimeout(() => successDiv.remove(), 1000);
-    }, 4000);
+        messageDiv.style.animation = 'statusSlideOut 0.5s ease';
+        setTimeout(() => messageDiv.remove(), 500);
+    }, 5000);
 }
 
 // ============================================
-// 3. إضافة أنماط CSS
-// ============================================
-if (!document.getElementById('firebase-animation-styles')) {
-    const style = document.createElement('style');
-    style.id = 'firebase-animation-styles';
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// ============================================
-// 4. التهيئة التلقائية عند تحميل الصفحة
+// 9. التهيئة التلقائية
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 الصفحة محملة - جاري بدء Firebase...');
+    console.log('📄 الصفحة محملة، جاري تهيئة Firebase الذكية...');
     
-    // المحاولة الأولى بعد تأخير قصير
+    // الانتظار قليلاً لتحميل SDK
     setTimeout(() => {
-        const initialized = initializeFirebaseSimple();
+        const initialized = smartFirebaseInit();
         
         if (initialized) {
-            // إعداد مستمع المصادقة
-            if (window.fbAuth) {
-                window.fbAuth.onAuthStateChanged((user) => {
-                    if (user) {
-                        console.log('👤 مستخدم مسجل:', user.email);
-                    } else {
-                        console.log('👤 لا يوجد مستخدم مسجل');
-                    }
-                });
-            }
-            
-            // تشغيل اختبار تلقائي
-            setTimeout(testFirebaseConnection, 2000);
-        } else {
-            // محاولة ثانية بعد 3 ثواني
-            setTimeout(() => {
-                console.log('🔄 محاولة ثانية لتهيئة Firebase...');
-                initializeFirebaseSimple();
-            }, 3000);
+            // إظهار معلومات المشروع في لوحة التحكم
+            showProjectInfo();
         }
     }, 1000);
 });
 
 // ============================================
-// 5. دالة اختبار الاتصال (للاستخدام اليدوي)
+// 10. لوحة معلومات المشروع
 // ============================================
-window.testFirebaseConnection = async function() {
-    console.log('🔍 بدء اختبار Firebase...');
+function showProjectInfo() {
+    const infoPanel = document.createElement('div');
+    infoPanel.id = 'firebase-info-panel';
+    infoPanel.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.15);
+        z-index: 9998;
+        border: 2px solid #4CAF50;
+        max-width: 300px;
+        backdrop-filter: blur(10px);
+    `;
     
-    // التحقق من التهيئة
-    if (!isFirebaseInitialized) {
-        const result = initializeFirebaseSimple();
-        if (!result) {
-            alert('❌ Firebase غير مهيأ!\n\nجاري المحاولة مرة أخرى...');
-            return false;
-        }
+    infoPanel.innerHTML = `
+        <div style="margin-bottom: 15px;">
+            <h4 style="margin: 0 0 10px 0; color: #333; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-project-diagram" style="color: #4CAF50;"></i>
+                معلومات المشروع
+            </h4>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                <div style="font-size: 12px; color: #666;">المشروع الحالي:</div>
+                <div style="font-weight: bold; color: #4CAF50;">${currentProject.name}</div>
+                <div style="font-size: 11px; color: #999;">${currentProject.id}</div>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div style="text-align: center;">
+                <div style="font-size: 12px; color: #666;">الحالة</div>
+                <div id="project-status" style="color: #4CAF50; font-weight: bold;">✅ متصل</div>
+            </div>
+            <div style="text-align: center;">
+                <div style="font-size: 12px; color: #666;">النوع</div>
+                <div style="color: #2196F3; font-weight: bold;">${currentProject.id.includes('marketplace') ? 'متاجر' : 'لياقة'}</div>
+            </div>
+        </div>
+        
+        <button onclick="testCurrentProject()" style="
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        ">
+            <i class="fas fa-test"></i> اختبار المشروع
+        </button>
+        
+        <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #eee;">
+            <div style="font-size: 11px; color: #999; text-align: center;">
+                ${new Date().toLocaleDateString('ar-EG')} • ${new Date().toLocaleTimeString('ar-EG')}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(infoPanel);
+    
+    // زر إخفاء اللوحة
+    const closeBtn = document.createElement('button');
+    closeBtn.innerHTML = '×';
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #f44336;
+        color: white;
+        border: none;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    closeBtn.onclick = () => infoPanel.remove();
+    infoPanel.appendChild(closeBtn);
+}
+
+// ============================================
+// 11. دوال اختبار
+// ============================================
+window.testCurrentProject = async function() {
+    if (!window.firebaseState.ready) {
+        alert('❌ Firebase غير مهيأ!');
+        return false;
     }
     
     try {
-        // اختبار بسيط للاتصال
-        const testData = {
-            test: true,
-            timestamp: new Date().toISOString(),
-            page: window.location.href,
-            project: firebaseConfig.projectId
-        };
+        // اختبار قاعدة البيانات
+        const testRef = window.db.collection('_project_tests').doc('current_test');
+        await testRef.set({
+            project: currentProject.id,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            url: window.location.href,
+            test: 'success'
+        });
         
-        // محاولة الكتابة إلى Firestore
-        await window.fbDb.collection('_connection_tests').add(testData);
+        alert(`✅ اختبار ناجح!\n\n🏆 المشروع: ${currentProject.name}\n📊 الـ ID: ${currentProject.id}\n🌐 الرابط: ${window.location.hostname}\n\n✅ Firebase يعمل بشكل ممتاز!`);
         
-        // رسالة النجاح
-        alert(`✅ Firebase يعمل بشكل ممتاز!\n\n✅ المشروع: ${firebaseConfig.projectId}\n✅ الدومين: ${window.location.hostname}\n✅ الوقت: ${new Date().toLocaleTimeString()}`);
-        
-        console.log('🎊 اختبار Firebase ناجح!');
         return true;
         
     } catch (error) {
-        console.error('❌ فشل اختبار Firebase:', error);
-        
-        // رسالة الخطأ
-        alert(`❌ فشل اختبار Firebase!\n\nالخطأ: ${error.message}\n\nجاري المحاولة مرة أخرى...`);
-        
-        // إعادة المحاولة
-        setTimeout(() => testFirebaseConnection(), 2000);
+        alert(`❌ فشل الاختبار!\n\nالخطأ: ${error.message}\n\nالمشروع: ${currentProject.name}`);
         return false;
     }
 };
 
 // ============================================
-// 6. دالة للتحقق من حالة Firebase
+// 12. إظهار معلومات التصحيح
 // ============================================
-window.getFirebaseStatus = function() {
-    return {
-        initialized: isFirebaseInitialized,
-        projectId: firebaseConfig.projectId,
-        attempts: initializationAttempts,
-        sdkLoaded: typeof firebase !== 'undefined',
-        appsCount: typeof firebase !== 'undefined' ? firebase.apps.length : 0
-    };
+window.showFirebaseDebugInfo = function() {
+    const info = `
+🎯 معلومات Firebase:
+══════════════════════
+📋 المشروع: ${currentProject.name}
+🔑 الـ ID: ${currentProject.id}
+✅ الحالة: ${window.firebaseState.ready ? 'متصل' : 'غير متصل'}
+🌐 الدومين: ${currentHost}
+📁 المسار: ${currentPath}
+⏰ الوقت: ${new Date().toLocaleTimeString()}
+══════════════════════
+📊 API Key: ${firebaseConfig.apiKey.substring(0, 20)}...
+🏠 Auth Domain: ${firebaseConfig.authDomain}
+══════════════════════
+    `;
+    
+    console.log(info);
+    alert('📋 افتح Console (F12) لرؤية معلومات التصحيح الكاملة');
 };
 
 // ============================================
-// 7. إظهار زر الاختبار في الصفحة
+// 13. زر التصحيح في الصفحة
 // ============================================
-// إضافة زر اختبار Firebase
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => {
-        const testButton = document.createElement('button');
-        testButton.id = 'firebase-test-button';
-        testButton.innerHTML = '🔥 اختبار Firebase';
-        testButton.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #FF9800;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            z-index: 9997;
-            font-weight: bold;
-            box-shadow: 0 3px 10px rgba(255, 152, 0, 0.3);
-            transition: all 0.3s;
-        `;
-        
-        testButton.onmouseover = () => {
-            testButton.style.transform = 'scale(1.05)';
-            testButton.style.boxShadow = '0 5px 15px rgba(255, 152, 0, 0.5)';
-        };
-        
-        testButton.onmouseout = () => {
-            testButton.style.transform = 'scale(1)';
-            testButton.style.boxShadow = '0 3px 10px rgba(255, 152, 0, 0.3)';
-        };
-        
-        testButton.onclick = testFirebaseConnection;
-        
-        document.body.appendChild(testButton);
-    }, 2000);
-});
+setTimeout(() => {
+    const debugBtn = document.createElement('button');
+    debugBtn.innerHTML = '🐛 تصحيح Firebase';
+    debugBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background: #9C27B0;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        z-index: 9997;
+        font-size: 12px;
+        font-weight: bold;
+        box-shadow: 0 3px 10px rgba(156, 39, 176, 0.3);
+    `;
+    debugBtn.onclick = showFirebaseDebugInfo;
+    document.body.appendChild(debugBtn);
+}, 2000);
 
 // ============================================
-// 8. تصدير المعلومات للتشخيص
+// 14. تصدير المعلومات
 // ============================================
-console.log('🔧 Firebase Config Loaded:', {
+console.log('🔧 Firebase Smart Config Loaded Successfully!');
+console.log('🎯 Current Project:', currentProject.name);
+console.log('📊 Config:', {
     projectId: firebaseConfig.projectId,
-    apiKey: firebaseConfig.apiKey.substring(0, 10) + '...',
-    timestamp: new Date().toLocaleTimeString()
+    apiKeyPreview: firebaseConfig.apiKey.substring(0, 15) + '...',
+    host: currentHost
 });
