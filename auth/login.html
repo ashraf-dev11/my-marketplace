@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -118,4 +117,134 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
-                    <input type="email" id="email" class="form-control" required
+                    <input type="email" id="email" class="form-control" required placeholder="example@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="password" class="form-control" required placeholder="أدخل كلمة المرور">
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-auth" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                    </button>
+                </div>
+            </form>
+            
+            <div class="auth-links">
+                <p>ليس لديك حساب؟ <a href="register.html">إنشاء حساب جديد</a></p>
+                <p><a href="../index.html"><i class="fas fa-home"></i> العودة للرئيسية</a></p>
+            </div>
+            
+            <!-- حساب تجريبي للاختبار -->
+            <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5; border-radius: 8px; border-right: 4px solid #4CAF50;">
+                <h4 style="margin-bottom: 0.5rem; color: #333;"><i class="fas fa-flask"></i> حساب تجريبي:</h4>
+                <p style="margin: 5px 0;"><strong>البريد:</strong> test@example.com</p>
+                <p style="margin: 5px 0;"><strong>كلمة المرور:</strong> test123456</p>
+                <button onclick="useTestAccount()" style="background: #2196F3; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-top: 10px; width: 100%;">
+                    <i class="fas fa-magic"></i> استخدام الحساب التجريبي
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // استخدام حساب تجريبي
+        function useTestAccount() {
+            document.getElementById('email').value = 'test@example.com';
+            document.getElementById('password').value = 'test123456';
+            document.getElementById('loginBtn').click();
+        }
+
+        // معالجة نموذج تسجيل الدخول
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            // التحقق من المدخلات
+            if (!email || !password) {
+                showError('يرجى إدخال البريد وكلمة المرور');
+                return;
+            }
+            
+            if (!firebase || !firebase.auth) {
+                showError('Firebase غير متصل! حاول تحديث الصفحة');
+                return;
+            }
+            
+            // تعطيل زر الدخول
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري تسجيل الدخول...';
+            
+            try {
+                // تسجيل الدخول
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // تحديث آخر دخول
+                await firebase.firestore().collection('users').doc(user.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // الحصول على نوع المستخدم
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                const userData = userDoc.data();
+                
+                // الانتقال للصفحة المناسبة
+                setTimeout(() => {
+                    if (userData.userType === 'admin') {
+                        window.location.href = '../admin/dashboard.html';
+                    } else if (userData.userType === 'vendor') {
+                        window.location.href = '../vendor/dashboard.html';
+                    } else {
+                        window.location.href = '../index.html';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                // معالجة الأخطاء
+                let errorMessage = 'حدث خطأ غير معروف';
+                
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'البريد الإلكتروني غير مسجل';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'كلمة المرور غير صحيحة';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'بريد إلكتروني غير صالح';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'خطأ في الشبكة، تحقق من اتصال الإنترنت';
+                        break;
+                    default:
+                        errorMessage = error.message;
+                }
+                
+                showError(errorMessage);
+                
+                // إعادة تفعيل زر الدخول
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> تسجيل الدخول';
+            }
+        });
+
+        // دالة عرض الرسائل
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // إخفاء الرسالة بعد 5 ثواني
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
